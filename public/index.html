@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DJI Player</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #eee; font-family: system-ui, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Library */
+  #library { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; align-content: start; }
+  .video-card { background: #1a1a1a; border-radius: 10px; cursor: pointer; overflow: hidden; min-height: 260px; transition: transform .15s, box-shadow .15s; position: relative; }
+  .video-card:hover, .video-card:active { transform: scale(1.02); box-shadow: 0 4px 20px rgba(255,255,255,.1); }
+  .video-card img { display: block; width: 100%; height: 220px; object-fit: cover; }
+  .video-info { padding: 9px 12px 11px; }
+  .video-name { font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; cursor: pointer; }
+  .video-name:hover { color: #fff; text-decoration: underline; }
+  .video-meta { display: flex; gap: 10px; font-size: 11px; color: #666; }
+  .video-location { font-size: 11px; color: #558; margin-top: 3px; }
+  .video-filename { font-size: 10px; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .video-yt-link { font-size: 10px; margin-top: 3px; } .video-yt-link a { color: #f44; text-decoration: none; } .video-yt-link a:hover { text-decoration: underline; }
+
+  /* Card action bar — overlays bottom of thumbnail on hover */
+  .card-actions { position: absolute; top: 182px; left: 0; right: 0; height: 38px; background: linear-gradient(transparent, rgba(0,0,0,.75)); display: none; align-items: center; justify-content: space-between; padding: 0 6px; gap: 4px; z-index: 2; }
+  .video-card:hover .card-actions, .video-card:focus-within .card-actions { display: flex; }
+  @media (hover: none) { .card-actions { display: flex; } }
+  .card-act-btn { background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.15); color: #eee; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .card-act-btn:hover { background: rgba(255,255,255,.15); }
+  .card-act-btn.red { background: rgba(180,0,0,.7); border-color: transparent; }
+  .card-act-btn.purple { background: rgba(80,40,160,.8); border-color: transparent; color: #ddf; }
+  .card-act-btn.green { background: rgba(0,120,0,.8); border-color: transparent; }
+  .card-act-btn.yt { background: rgba(200,0,0,.8); border-color: transparent; }
+
+  /* Player description */
+  #now-playing-title { font-size: 13px; color: #ccc; padding: 8px 14px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  #now-playing-desc { font-size: 12px; color: #666; padding: 4px 14px 0; line-height: 1.5; flex-shrink: 0; max-height: 54px; overflow: hidden; display: none; }
+  #now-playing-desc.visible { display: block; }
+  .video-meta span { white-space: nowrap; }
+  #search-bar { display: flex; gap: 8px; padding: 12px 16px; background: #111; border-bottom: 1px solid #222; }
+  #search { flex: 1; background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+  #search:focus { outline: none; border-color: #555; }
+  #sort { background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #lock-btn { background: none; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; }
+  #lock-btn.unlocked { border-color: #f90; color: #f90; }
+  #describe-all-btn { background: rgba(80,40,160,.7); border: 1px solid #664; color: #ddf; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #describe-all-btn:disabled { opacity: .5; cursor: default; }
+  #tag-filter { display: flex; gap: 6px; padding: 8px 16px; background: #0d0d0d; border-bottom: 1px solid #1a1a1a; overflow-x: auto; flex-shrink: 0; }
+  #tag-filter:empty { display: none; }
+  .tag-pill-filter { background: #1e1e1e; border: 1px solid #333; color: #aaa; padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tag-pill-filter.active { background: #fff; border-color: #fff; color: #000; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .card-tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: #2a2a2a; color: #aaa; border: 1px solid #333; }
+  .card-tag.private { background: #3a1a1a; color: #f66; border-color: #622; }
+
+  /* Edit description modal */
+  #edit-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  #edit-modal.open { display: flex; }
+  #edit-modal-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+  #edit-modal-box h3 { font-size: 14px; color: #eee; margin: 0; }
+  .edit-field label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .edit-field input, .edit-field textarea { width: 100%; background: #111; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .edit-field input:focus, .edit-field textarea:focus { outline: none; border-color: #555; }
+  #edit-modal-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .edit-save-btn { flex: 1; background: #2a2a2a; border: 1px solid #444; color: #eee; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .edit-yt-btn { flex: 1; background: #c00; border: none; color: #fff; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .edit-yt-btn:disabled { opacity: .5; cursor: default; }
+  #edit-cancel-btn { background: none; border: 1px solid #333; color: #666; padding: 9px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #edit-yt-status { font-size: 12px; color: #888; text-align: center; min-height: 16px; }
+
+  /* YouTube upload modal */
+  #yt-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  #yt-modal.open { display: flex; }
+  #yt-modal-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 12px; }
+  #yt-modal-box h3 { font-size: 14px; color: #eee; margin: 0; }
+  .yt-field label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .yt-field input, .yt-field textarea, .yt-field select { width: 100%; background: #111; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .yt-field input:focus, .yt-field textarea:focus, .yt-field select:focus { outline: none; border-color: #555; }
+  #yt-modal-actions { display: flex; gap: 8px; }
+  #yt-upload-btn { flex: 1; background: #c00; border: none; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; }
+  #yt-upload-btn:hover { background: #e00; }
+  #yt-upload-btn:disabled { opacity: .5; cursor: default; }
+  #yt-cancel-btn { background: #222; border: 1px solid #333; color: #888; padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #yt-progress-bar { height: 4px; background: #222; border-radius: 2px; overflow: hidden; display: none; }
+  #yt-progress-fill { height: 100%; background: #c00; width: 0%; transition: width .3s; }
+  #yt-status-msg { font-size: 12px; color: #888; text-align: center; min-height: 16px; }
+  #yt-connect-msg { font-size: 13px; color: #fa0; text-align: center; }
+  #yt-connect-btn { width: 100%; background: #222; border: 1px solid #444; color: #eee; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+
+  /* Tag editor modal */
+  #tag-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  #tag-modal.open { display: flex; }
+  #tag-modal-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 18px; width: 100%; max-width: 380px; }
+  #tag-modal-title { font-size: 13px; color: #888; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #tag-modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 28px; }
+  .modal-tag { font-size: 12px; padding: 3px 8px; border-radius: 10px; background: #2a2a2a; color: #ccc; border: 1px solid #444; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .modal-tag.private { background: #3a1a1a; color: #f66; border-color: #622; }
+  .modal-tag-x { opacity: .6; font-size: 11px; }
+  #tag-input-row { display: flex; gap: 8px; }
+  #tag-input { flex: 1; background: #111; border: 1px solid #333; color: #eee; padding: 7px 10px; border-radius: 8px; font-size: 13px; }
+  #tag-input:focus { outline: none; border-color: #555; }
+  #tag-add-btn { background: #333; border: none; color: #fff; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  #tag-modal-close { margin-top: 12px; width: 100%; background: #222; border: 1px solid #333; color: #888; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  /* Quick-tag suggestions */
+  #tag-suggestions { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  h1 { font-size: 16px; font-weight: 600; color: #fff; align-self: center; }
+
+  /* Player */
+  #player-view { display: none; flex-direction: column; height: 100dvh; background: #000; }
+  #player-view.active { display: flex; }
+  #library-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  #library-view.hidden { display: none; }
+
+  #video-wrap { flex: 1; position: relative; overflow: hidden; background: #000; cursor: pointer; }
+  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
+  video#src-video { display: none; }
+
+  /* Controls */
+  #controls { background: linear-gradient(transparent, #000d); padding: 10px 14px 14px; }
+  #progress-wrap { position: relative; height: 28px; display: flex; align-items: center; margin-bottom: 6px; cursor: pointer; }
+  #progress-bg { width: 100%; height: 4px; background: #333; border-radius: 2px; position: relative; }
+  #progress-fill { height: 100%; background: #fff; border-radius: 2px; width: 0%; transition: width .1s linear; }
+  #progress-thumb { position: absolute; top: 50%; width: 14px; height: 14px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); left: 0%; box-shadow: 0 0 4px rgba(0,0,0,.5); }
+
+  #ctrl-row { display: flex; align-items: center; gap: 10px; }
+  .ctrl-btn { background: none; border: none; color: #fff; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; transition: opacity .15s; }
+  .ctrl-btn:active { opacity: .6; }
+  #time-display { font-size: 12px; color: #bbb; flex: 1; text-align: center; }
+  #back-btn { font-size: 14px; padding: 8px 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #eee; cursor: pointer; margin-bottom: 0; }
+
+  /* Enhancements */
+  #enhancements { display: flex; gap: 10px; padding: 8px 14px; background: #0d0d0d; overflow-x: auto; flex-shrink: 0; }
+  .enh-group { display: flex; flex-direction: column; gap: 2px; min-width: 100px; }
+  .enh-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+  .enh-slider { width: 100%; accent-color: #fff; }
+
+  #now-playing { font-size: 12px; color: #888; padding: 6px 14px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+
+  /* Speed menu */
+  #speed-menu { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden; display: none; z-index: 10; }
+  #speed-menu button { display: block; width: 100%; padding: 8px 20px; background: none; border: none; color: #eee; cursor: pointer; font-size: 13px; text-align: center; }
+  #speed-menu button:hover { background: #333; }
+  #speed-wrap { position: relative; }
+
+  /* Zoom */
+  #zoom-display { font-size: 11px; color: #666; padding: 2px 6px; }
+
+  /* Player actions */
+  #player-actions { display: flex; gap: 8px; padding: 6px 14px; background: #0d0d0d; flex-shrink: 0; overflow-x: auto; border-top: 1px solid #1a1a1a; }
+  .action-btn { background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .action-btn:hover { background: #2a2a2a; }
+  .action-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Transcript modal */
+  #transcript-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; align-items: flex-end; justify-content: center; padding: 0; }
+  #transcript-modal.open { display: flex; }
+  #transcript-box { background: #111; border-top: 1px solid #333; border-radius: 16px 16px 0 0; width: 100%; max-width: 700px; max-height: 70vh; display: flex; flex-direction: column; padding: 16px 18px 24px; }
+  #transcript-title { font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  #transcript-close { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  #transcript-body { overflow-y: auto; flex: 1; }
+  #transcript-text { font-size: 15px; color: #ddd; line-height: 1.7; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<div id="library-view">
+  <div id="search-bar">
+    <h1>🎬 DJI Player</h1>
+    <input id="search" type="search" placeholder="Search videos…" />
+    <select id="sort">
+      <option value="date-desc">Newest</option>
+      <option value="date-asc">Oldest</option>
+      <option value="size-desc">Largest</option>
+      <option value="size-asc">Smallest</option>
+      <option value="dur-desc">Longest</option>
+      <option value="dur-asc">Shortest</option>
+      <option value="name-asc">Name A–Z</option>
+    </select>
+    <button id="lock-btn" title="Private videos">🔒</button>
+    <button id="describe-all-btn" title="Generate AI titles for all videos">✨ All</button>
+  </div>
+  <div id="describe-progress-bar" style="display:none;height:3px;background:#111;flex-shrink:0">
+    <div id="describe-progress-fill" style="height:100%;background:#88f;width:0%;transition:width .5s"></div>
+  </div>
+  <div id="tag-filter"></div>
+  <div id="library"></div>
+</div>
+
+<!-- Edit title/description modal -->
+<div id="edit-modal">
+  <div id="edit-modal-box">
+    <h3>✏️ Edit Title &amp; Description</h3>
+    <div id="edit-yt-links" style="font-size:12px;color:#888;display:none"></div>
+    <div class="edit-field">
+      <label>Title</label>
+      <input id="edit-title" type="text" maxlength="100" />
+    </div>
+    <div class="edit-field">
+      <label>Description</label>
+      <textarea id="edit-desc" rows="5"></textarea>
+    </div>
+    <div class="edit-field">
+      <label>YouTube Tags (comma-separated)</label>
+      <input id="edit-yt-tags" type="text" placeholder="drone, travel, brisbane" />
+    </div>
+    <div id="edit-yt-status"></div>
+    <div id="edit-modal-actions">
+      <button id="edit-cancel-btn">Cancel</button>
+      <button class="edit-save-btn" id="edit-save-local-btn">Save</button>
+      <button class="edit-yt-btn" id="edit-push-yt-btn" disabled title="Push changes to YouTube">▶ Update YouTube</button>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube upload modal -->
+<div id="yt-modal">
+  <div id="yt-modal-box">
+    <h3>▶ Upload to YouTube</h3>
+    <div id="yt-connect-section" style="display:none">
+      <p id="yt-connect-msg">Not connected to YouTube yet.</p>
+      <button id="yt-connect-btn">Connect YouTube Account</button>
+    </div>
+    <div id="yt-form-section">
+      <div class="yt-field">
+        <label>Title</label>
+        <input id="yt-title" type="text" maxlength="100" />
+      </div>
+      <div class="yt-field">
+        <label>Description</label>
+        <textarea id="yt-desc" rows="5"></textarea>
+      </div>
+      <div class="yt-field">
+        <label>Channel</label>
+        <select id="yt-channel"><option value="">Loading…</option></select>
+      </div>
+      <div class="yt-field">
+        <label>Privacy</label>
+        <select id="yt-privacy">
+          <option value="unlisted" selected>Unlisted (only people with the link)</option>
+          <option value="private">Private (only me)</option>
+          <option value="public">Public</option>
+        </select>
+      </div>
+      <div id="yt-progress-bar"><div id="yt-progress-fill"></div></div>
+      <div id="yt-status-msg"></div>
+      <div id="yt-modal-actions">
+        <button id="yt-cancel-btn">Cancel</button>
+        <button id="yt-upload-btn">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tag editor modal -->
+<div id="tag-modal">
+  <div id="tag-modal-box">
+    <div id="tag-modal-title"></div>
+    <div id="tag-modal-tags"></div>
+    <div id="tag-suggestions"></div>
+    <div id="tag-input-row">
+      <input id="tag-input" type="text" placeholder="Add tag…" />
+      <button id="tag-add-btn">Add</button>
+    </div>
+    <button id="tag-modal-close">Done</button>
+  </div>
+</div>
+
+<div id="player-view">
+  <div id="now-playing-title"></div>
+  <div id="now-playing-desc"></div>
+  <div id="video-wrap" id="video-container">
+    <video id="src-video" playsinline></video>
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div id="enhancements">
+    <div class="enh-group">
+      <span class="enh-label">Brightness</span>
+      <input class="enh-slider" id="brightness" type="range" min="0" max="200" value="100">
+    </div>
+    <div class="enh-group">
+      <span class="enh-label">Contrast</span>
+      <input class="enh-slider" id="contrast" type="range" min="0" max="200" value="100">
+    </div>
+    <div class="enh-group">
+      <span class="enh-label">Saturation</span>
+      <input class="enh-slider" id="saturation" type="range" min="0" max="200" value="100">
+    </div>
+    <div class="enh-group">
+      <span class="enh-label">Sharpness</span>
+      <input class="enh-slider" id="sharpness" type="range" min="0" max="100" value="0">
+    </div>
+    <div class="enh-group">
+      <span class="enh-label">Zoom</span>
+      <input class="enh-slider" id="zoom" type="range" min="100" max="400" value="100">
+    </div>
+  </div>
+
+  <div id="player-actions">
+    <button class="action-btn" id="export-btn">⬇ Export</button>
+    <button class="action-btn" id="transcript-btn">📝 Transcribe</button>
+    <button class="action-btn" id="auto-enhance-btn">✨ Auto Enhance</button>
+    <button class="action-btn" id="reset-enhance-btn">↺ Reset</button>
+  </div>
+
+  <div id="controls">
+    <div id="progress-wrap">
+      <div id="progress-bg">
+        <div id="progress-fill"></div>
+        <div id="progress-thumb"></div>
+      </div>
+    </div>
+    <div id="ctrl-row">
+      <button class="ctrl-btn" id="back-btn" title="Library">⬅</button>
+      <button class="ctrl-btn" id="skip-back" title="Back 10s">⏪</button>
+      <button class="ctrl-btn" id="play-pause" title="Play/Pause">▶</button>
+      <button class="ctrl-btn" id="skip-fwd" title="Forward 10s">⏩</button>
+      <div id="time-display">0:00 / 0:00</div>
+      <span id="zoom-display">1×</span>
+      <div id="speed-wrap">
+        <button class="ctrl-btn" id="speed-btn" title="Speed">1×</button>
+        <div id="speed-menu">
+          <button data-speed="0.5">0.5×</button>
+          <button data-speed="1">1×</button>
+          <button data-speed="1.5">1.5×</button>
+          <button data-speed="2">2×</button>
+        </div>
+      </div>
+      <button class="ctrl-btn" id="fullscreen-btn" title="Fullscreen">⛶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transcript modal -->
+<div id="transcript-modal">
+  <div id="transcript-box">
+    <div id="transcript-title">
+      <span id="transcript-lang-label">Transcript</span>
+      <button id="transcript-close">✕</button>
+    </div>
+    <div id="transcript-body">
+      <div id="transcript-text"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const video = document.getElementById('src-video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const libraryView = document.getElementById('library-view');
+const playerView = document.getElementById('player-view');
+const libraryEl = document.getElementById('library');
+const searchEl = document.getElementById('search');
+const playPauseBtn = document.getElementById('play-pause');
+const progressFill = document.getElementById('progress-fill');
+const progressThumb = document.getElementById('progress-thumb');
+const progressWrap = document.getElementById('progress-wrap');
+const timeDisplay = document.getElementById('time-display');
+const nowPlayingTitle = document.getElementById('now-playing-title');
+const nowPlayingDesc  = document.getElementById('now-playing-desc');
+const zoomDisplay = document.getElementById('zoom-display');
+
+let allVideos = [];
+let allTags = {};
+let activeTagFilter = null;
+let activeLocFilter = null;
+let privateUnlocked = false;
+let rafId = null;
+let currentZoom = 1;
+let panX = 0, panY = 0;
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+let brightness = 100, contrast = 100, saturation = 100, sharpness = 0;
+let currentVideoPath = null;
+
+// --- Library ---
+async function loadLibrary() {
+  const [vRes, tRes] = await Promise.all([fetch('/api/videos'), fetch('/api/tags')]);
+  allVideos = await vRes.json();
+  allTags = await tRes.json();
+  // Also seed allTags from the video response (in case tags changed mid-session)
+  for (const v of allVideos) {
+    if (v.tags && v.tags.length) allTags[v.path] = v.tags;
+  }
+  renderTagFilter();
+  applyFilters();
+}
+
+function sortedVideos(videos) {
+  const val = document.getElementById('sort').value;
+  const sorted = [...videos];
+  sorted.sort((a, b) => {
+    switch (val) {
+      case 'date-desc': return new Date(b.modified) - new Date(a.modified);
+      case 'date-asc':  return new Date(a.modified) - new Date(b.modified);
+      case 'size-desc': return b.size - a.size;
+      case 'size-asc':  return a.size - b.size;
+      case 'dur-desc':  return (b.duration || 0) - (a.duration || 0);
+      case 'dur-asc':   return (a.duration || 0) - (b.duration || 0);
+      case 'name-asc':  return a.name.localeCompare(b.name);
+    }
+  });
+  return sorted;
+}
+
+function renderTagFilter() {
+  const tagCounts = {};
+  for (const tags of Object.values(allTags)) {
+    for (const t of tags) {
+      if (t === 'hidden' && !privateUnlocked) continue;
+      tagCounts[t] = (tagCounts[t] || 0) + 1;
+    }
+  }
+  const locCounts = {};
+  for (const v of allVideos) {
+    if (v.location) locCounts[v.location] = (locCounts[v.location] || 0) + 1;
+  }
+
+  const row = document.getElementById('tag-filter');
+  row.innerHTML = '';
+
+  const allPill = document.createElement('button');
+  allPill.className = 'tag-pill-filter' + (!activeTagFilter && !activeLocFilter ? ' active' : '');
+  allPill.textContent = 'All';
+  allPill.onclick = () => { activeTagFilter = null; activeLocFilter = null; renderTagFilter(); applyFilters(); };
+  row.appendChild(allPill);
+
+  Object.entries(locCounts).sort().forEach(([loc, count]) => {
+    const p = document.createElement('button');
+    p.className = 'tag-pill-filter' + (activeLocFilter === loc ? ' active' : '');
+    p.style.color = '#88f';
+    p.textContent = `📍 ${loc} (${count})`;
+    p.onclick = () => { activeLocFilter = loc; activeTagFilter = null; renderTagFilter(); applyFilters(); };
+    row.appendChild(p);
+  });
+
+  Object.entries(tagCounts).sort().forEach(([tag, count]) => {
+    const p = document.createElement('button');
+    p.className = 'tag-pill-filter' + (activeTagFilter === tag ? ' active' : '');
+    p.textContent = `${tag} (${count})`;
+    p.onclick = () => { activeTagFilter = tag; activeLocFilter = null; renderTagFilter(); applyFilters(); };
+    row.appendChild(p);
+  });
+}
+
+function renderLibrary(videos) {
+  libraryEl.innerHTML = '';
+  if (!videos.length) {
+    libraryEl.innerHTML = '<p style="color:#555;padding:20px">No videos found.</p>';
+    return;
+  }
+  sortedVideos(videos).forEach(v => {
+    const tags = allTags[v.path] || [];
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    const sizeMB = (v.size / 1024 / 1024).toFixed(0);
+    const date = new Date(v.modified).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const dur = v.duration ? fmtDur(v.duration) : '';
+    const tagHtml = tags.map(t => `<span class="card-tag ${t === 'hidden' ? 'hidden' : ''}">${t}</span>`).join('');
+    card.innerHTML = `
+      <img src="/thumb/${v.path}" loading="lazy" onerror="const i=this;setTimeout(()=>{const s=i.src;i.src='';i.src=s;},4000)" />
+      <div class="card-actions">
+        <button class="card-act-btn purple ai-btn" title="Generate AI title &amp; description">✨ AI</button>
+        <button class="card-act-btn edit-btn" title="Edit title &amp; description">✏️ Edit</button>
+        <button class="card-act-btn tag-edit-btn" title="Edit tags">🏷 Tags</button>
+        <button class="card-act-btn yt yt-btn" title="Upload to YouTube">▶ YouTube</button>
+        <button class="card-act-btn red delete-btn" title="Delete">✕</button>
+      </div>
+      <div class="video-info">
+        <div class="video-name">${v.aiTitle || v.name}</div>
+        ${v.aiTitle ? `<div class="video-filename">${v.name}</div>` : ''}
+        <div class="video-meta">
+          <span>${date}</span><span>${sizeMB} MB</span>${dur ? `<span>${dur}</span>` : ''}
+        </div>
+        ${v.location ? `<div class="video-location">📍 ${v.location}</div>` : ''}
+        ${v.ytVideoIds?.length ? `<div class="video-yt-link">${v.ytVideoIds.map(id => `<a href="https://youtu.be/${id}" target="_blank" onclick="event.stopPropagation()">▶ youtu.be/${id}</a>`).join(' ')}</div>` : ''}
+        ${tags.length ? `<div class="card-tags">${tagHtml}</div>` : ''}
+      </div>`;
+    card.querySelector('.delete-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (!confirm(`Delete ${v.name}?`)) return;
+      fetch(`/api/video/${v.path}`, { method: 'DELETE' }).then(r => {
+        if (r.ok) { allVideos = allVideos.filter(x => x.path !== v.path); applyFilters(); }
+        else r.text().then(t => alert('Delete failed: ' + t));
+      });
+    });
+    card.querySelector('.ai-btn').addEventListener('click', e => { e.stopPropagation(); queueDescribe(v, card.querySelector('.ai-btn')); });
+    if (v.aiTitle) { card.querySelector('.ai-btn').textContent = '✨ Re-describe'; card.querySelector('.ai-btn').classList.add('done'); }
+    card.querySelector('.edit-btn').addEventListener('click', e => { e.stopPropagation(); openEditModal(v); });
+    card.querySelector('.video-name').addEventListener('click', e => { e.stopPropagation(); openEditModal(v); });
+    card.querySelector('.tag-edit-btn').addEventListener('click', e => { e.stopPropagation(); openTagModal(v); });
+    card.querySelector('.yt-btn').addEventListener('click', e => { e.stopPropagation(); openYTModal(v, card.querySelector('.yt-btn')); });
+    card.addEventListener('click', () => openVideo(v));
+    libraryEl.appendChild(card);
+  });
+}
+
+function applyFilters() {
+  const q = searchEl.value.toLowerCase();
+  let list = allVideos.filter(v => {
+    const tags = allTags[v.path] || [];
+    if (tags.includes('hidden') && !privateUnlocked) return false;
+    if (q && !v.name.toLowerCase().includes(q) && !(v.transcript || '').toLowerCase().includes(q)) return false;
+    if (activeTagFilter && !tags.includes(activeTagFilter)) return false;
+    if (activeLocFilter && v.location !== activeLocFilter) return false;
+    return true;
+  });
+  renderLibrary(list);
+}
+searchEl.addEventListener('input', applyFilters);
+document.getElementById('sort').addEventListener('change', applyFilters);
+
+// --- Lock / private ---
+const lockBtn = document.getElementById('lock-btn');
+lockBtn.addEventListener('click', () => {
+  if (privateUnlocked) {
+    privateUnlocked = false;
+    lockBtn.textContent = '🔒';
+    lockBtn.classList.remove('unlocked');
+    if (activeTagFilter === 'hidden') { activeTagFilter = null; }
+    renderTagFilter(); applyFilters();
+  } else {
+    const pin = prompt('Enter PIN to show private videos:');
+    if (!pin) return;
+    fetch('/api/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin }) })
+      .then(r => {
+        if (r.ok) {
+          privateUnlocked = true;
+          lockBtn.textContent = '🔓';
+          lockBtn.classList.add('unlocked');
+          renderTagFilter(); applyFilters();
+        } else { alert('Wrong PIN'); }
+      });
+  }
+});
+
+// --- Tag editor modal ---
+let tagModalVideo = null;
+const tagModal = document.getElementById('tag-modal');
+const tagModalTitle = document.getElementById('tag-modal-title');
+const tagModalTags = document.getElementById('tag-modal-tags');
+const tagSuggestions = document.getElementById('tag-suggestions');
+const tagInput = document.getElementById('tag-input');
+
+function openTagModal(v) {
+  tagModalVideo = v;
+  tagModalTitle.textContent = v.name;
+  renderModalTags();
+  renderSuggestions();
+  tagInput.value = '';
+  tagModal.classList.add('open');
+  tagInput.focus();
+}
+
+function renderModalTags() {
+  const tags = allTags[tagModalVideo.path] || [];
+  tagModalTags.innerHTML = '';
+  tags.forEach(t => {
+    const el = document.createElement('span');
+    el.className = 'modal-tag' + (t === 'hidden' ? ' private' : '');
+    el.innerHTML = `${t} <span class="modal-tag-x">✕</span>`;
+    el.querySelector('.modal-tag-x').onclick = () => saveTag(tags.filter(x => x !== t));
+    tagModalTags.appendChild(el);
+  });
+  if (!tags.length) tagModalTags.innerHTML = '<span style="color:#555;font-size:12px">No tags yet</span>';
+}
+
+function renderSuggestions() {
+  const existing = new Set(allTags[tagModalVideo.path] || []);
+  const allUnique = [...new Set(Object.values(allTags).flat())].filter(t => !existing.has(t)).sort();
+  tagSuggestions.innerHTML = '';
+  allUnique.slice(0, 12).forEach(t => {
+    const el = document.createElement('button');
+    el.className = 'tag-pill-filter';
+    el.style.fontSize = '11px';
+    el.textContent = '+ ' + t;
+    el.onclick = () => saveTag([...(allTags[tagModalVideo.path] || []), t]);
+    tagSuggestions.appendChild(el);
+  });
+}
+
+function saveTag(tags) {
+  allTags[tagModalVideo.path] = tags;
+  fetch(`/api/tags/${tagModalVideo.path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags }) });
+  renderModalTags();
+  renderSuggestions();
+  renderTagFilter();
+  applyFilters();
+}
+
+document.getElementById('tag-add-btn').addEventListener('click', addTagFromInput);
+tagInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTagFromInput(); });
+function addTagFromInput() {
+  const val = tagInput.value.trim().toLowerCase();
+  if (!val) return;
+  const cur = allTags[tagModalVideo.path] || [];
+  if (!cur.includes(val)) saveTag([...cur, val]);
+  tagInput.value = '';
+}
+
+document.getElementById('tag-modal-close').addEventListener('click', () => tagModal.classList.remove('open'));
+tagModal.addEventListener('click', e => { if (e.target === tagModal) tagModal.classList.remove('open'); });
+
+// --- Player ---
+function resetEnhancements() {
+  brightness = 100; contrast = 100; saturation = 100; sharpness = 0;
+  document.getElementById('brightness').value = 100;
+  document.getElementById('contrast').value = 100;
+  document.getElementById('saturation').value = 100;
+  document.getElementById('sharpness').value = 0;
+}
+
+function openVideo(v) {
+  libraryView.classList.add('hidden');
+  playerView.classList.add('active');
+  nowPlayingTitle.textContent = v.aiTitle || v.name;
+  if (v.aiDesc) {
+    nowPlayingDesc.textContent = v.aiDesc;
+    nowPlayingDesc.classList.add('visible');
+  } else {
+    nowPlayingDesc.textContent = '';
+    nowPlayingDesc.classList.remove('visible');
+  }
+  video.src = '/video/' + v.path;
+  video.load();
+  video.play();
+  currentZoom = 1; panX = 0; panY = 0;
+  document.getElementById('zoom').value = 100;
+  currentVideoPath = v.path;
+  resetEnhancements();
+  loadTranscript(v.path);
+  startRender();
+}
+
+const transcriptModal = document.getElementById('transcript-modal');
+document.getElementById('transcript-close').addEventListener('click', () => transcriptModal.classList.remove('open'));
+transcriptModal.addEventListener('click', e => { if (e.target === transcriptModal) transcriptModal.classList.remove('open'); });
+
+function showTranscriptModal(text, language) {
+  document.getElementById('transcript-text').textContent = text;
+  document.getElementById('transcript-lang-label').textContent = language ? `Transcript · ${language}` : 'Transcript';
+  transcriptModal.classList.add('open');
+}
+
+function loadTranscript(encodedPath) {
+  const btn = document.getElementById('transcript-btn');
+  fetch(`/api/transcript/${encodedPath}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'done' && data.text) {
+        btn.textContent = '📝 Show Transcript';
+        btn.disabled = false;
+        btn.onclick = () => showTranscriptModal(data.text, data.language);
+      } else if (data.status === 'pending' || data.status === 'processing') {
+        btn.textContent = '⏳ Transcribing…';
+        btn.disabled = true;
+        btn.onclick = null;
+        setTimeout(() => { if (currentVideoPath === encodedPath) loadTranscript(encodedPath); }, 5000);
+      } else {
+        btn.textContent = '📝 Transcribe';
+        btn.disabled = false;
+        btn.onclick = () => queueTranscription(encodedPath);
+      }
+    });
+}
+
+function queueTranscription(encodedPath) {
+  const btn = document.getElementById('transcript-btn');
+  btn.textContent = '⏳ Queued…';
+  btn.disabled = true;
+  fetch(`/api/transcript/${encodedPath}`, { method: 'POST' })
+    .then(() => setTimeout(() => { if (currentVideoPath === encodedPath) loadTranscript(encodedPath); }, 3000));
+}
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  video.pause();
+  video.src = '';
+  cancelAnimationFrame(rafId);
+  playerView.classList.remove('active');
+  libraryView.classList.remove('hidden');
+});
+
+// --- Render loop with enhancements ---
+function paintFrame(vctx, cw, ch) {
+  const vw = video.videoWidth || cw;
+  const vh = video.videoHeight || ch;
+  vctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+
+  if (currentZoom <= 1) {
+    // Fit-contain at 1x
+    const scale = Math.min(cw / vw, ch / vh);
+    const dw = vw * scale, dh = vh * scale;
+    vctx.drawImage(video, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+  } else {
+    // Source-crop zoom: pull only the visible slice from the video at full resolution
+    const baseScale = Math.min(cw / vw, ch / vh);
+    const totalScale = baseScale * currentZoom;
+    const srcW = cw / totalScale;
+    const srcH = ch / totalScale;
+    const scx = vw / 2 - panX / totalScale;
+    const scy = vh / 2 - panY / totalScale;
+    const sx = Math.max(0, Math.min(vw - srcW, scx - srcW / 2));
+    const sy = Math.max(0, Math.min(vh - srcH, scy - srcH / 2));
+    vctx.drawImage(video, sx, sy, srcW, srcH, 0, 0, cw, ch);
+  }
+
+  if (sharpness > 0) {
+    vctx.globalCompositeOperation = 'overlay';
+    vctx.globalAlpha = sharpness / 300;
+    vctx.filter = `brightness(${brightness}%) contrast(${contrast + 80}%) saturate(${saturation}%)`;
+    if (currentZoom <= 1) {
+      const scale = Math.min(cw / vw, ch / vh);
+      const dw = vw * scale, dh = vh * scale;
+      vctx.drawImage(video, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+    } else {
+      const baseScale = Math.min(cw / vw, ch / vh);
+      const totalScale = baseScale * currentZoom;
+      const srcW = cw / totalScale, srcH = ch / totalScale;
+      const scx = vw / 2 - panX / totalScale;
+      const scy = vh / 2 - panY / totalScale;
+      const sx = Math.max(0, Math.min(vw - srcW, scx - srcW / 2));
+      const sy = Math.max(0, Math.min(vh - srcH, scy - srcH / 2));
+      vctx.drawImage(video, sx, sy, srcW, srcH, 0, 0, cw, ch);
+    }
+    vctx.globalCompositeOperation = 'source-over';
+    vctx.globalAlpha = 1;
+  }
+}
+
+function startRender() {
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const cw = canvas.offsetWidth;
+    const ch = canvas.offsetHeight;
+    if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
+      canvas.width = Math.round(cw * dpr);
+      canvas.height = Math.round(ch * dpr);
+    }
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cw, ch);
+    if (video.readyState >= 2) paintFrame(ctx, cw, ch);
+    ctx.restore();
+    rafId = requestAnimationFrame(draw);
+  }
+  cancelAnimationFrame(rafId);
+  draw();
+}
+
+// --- Playback controls ---
+canvas.addEventListener('click', (e) => {
+  if (!isPanning) video.paused ? video.play() : video.pause();
+});
+
+playPauseBtn.addEventListener('click', () => video.paused ? video.play() : video.pause());
+video.addEventListener('play', () => playPauseBtn.textContent = '⏸');
+video.addEventListener('pause', () => playPauseBtn.textContent = '▶');
+
+document.getElementById('skip-back').addEventListener('click', () => video.currentTime = Math.max(0, video.currentTime - 10));
+document.getElementById('skip-fwd').addEventListener('click', () => video.currentTime = Math.min(video.duration, video.currentTime + 10));
+
+video.addEventListener('timeupdate', updateProgress);
+video.addEventListener('loadedmetadata', updateProgress);
+
+function updateProgress() {
+  const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
+  progressFill.style.width = pct + '%';
+  progressThumb.style.left = pct + '%';
+  timeDisplay.textContent = `${fmt(video.currentTime)} / ${fmt(video.duration || 0)}`;
+}
+
+function fmt(s) {
+  if (!isFinite(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function fmtDur(s) {
+  if (!s || !isFinite(s)) return '';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2,'0')}:${sec}` : `${m}:${sec}`;
+}
+
+// Progress scrubbing
+let scrubbing = false;
+function scrubTo(e) {
+  const rect = progressWrap.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const pct = Math.max(0, Math.min(1, x / rect.width));
+  video.currentTime = pct * video.duration;
+}
+progressWrap.addEventListener('mousedown', e => { scrubbing = true; scrubTo(e); });
+progressWrap.addEventListener('touchstart', e => { scrubbing = true; scrubTo(e); }, { passive: true });
+window.addEventListener('mousemove', e => scrubbing && scrubTo(e));
+window.addEventListener('touchmove', e => scrubbing && scrubTo(e), { passive: true });
+window.addEventListener('mouseup', () => scrubbing = false);
+window.addEventListener('touchend', () => scrubbing = false);
+
+// Speed
+const speedBtn = document.getElementById('speed-btn');
+const speedMenu = document.getElementById('speed-menu');
+speedBtn.addEventListener('click', (e) => { e.stopPropagation(); speedMenu.style.display = speedMenu.style.display === 'block' ? 'none' : 'block'; });
+speedMenu.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const s = parseFloat(btn.dataset.speed);
+    video.playbackRate = s;
+    speedBtn.textContent = s + '×';
+    speedMenu.style.display = 'none';
+  });
+});
+document.addEventListener('click', () => speedMenu.style.display = 'none');
+
+// --- Enhancement sliders ---
+document.getElementById('brightness').addEventListener('input', e => brightness = e.target.value);
+document.getElementById('contrast').addEventListener('input', e => contrast = e.target.value);
+document.getElementById('saturation').addEventListener('input', e => saturation = e.target.value);
+document.getElementById('sharpness').addEventListener('input', e => sharpness = parseInt(e.target.value));
+document.getElementById('zoom').addEventListener('input', e => {
+  currentZoom = e.target.value / 100;
+  zoomDisplay.textContent = currentZoom.toFixed(1) + '×';
+});
+
+// --- Zoom (pinch on mobile) ---
+let lastPinchDist = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) lastPinchDist = pinchDist(e);
+  else if (e.touches.length === 1) { isPanning = false; panStart = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY }; }
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const d = pinchDist(e);
+    if (lastPinchDist) currentZoom = Math.max(1, Math.min(4, currentZoom * d / lastPinchDist));
+    lastPinchDist = d;
+    document.getElementById('zoom').value = currentZoom * 100;
+    zoomDisplay.textContent = currentZoom.toFixed(1) + '×';
+    isPanning = true;
+  } else if (e.touches.length === 1 && currentZoom > 1) {
+    isPanning = true;
+    panX = e.touches[0].clientX - panStart.x;
+    panY = e.touches[0].clientY - panStart.y;
+  }
+}, { passive: true });
+canvas.addEventListener('touchend', () => { lastPinchDist = null; setTimeout(() => isPanning = false, 100); });
+
+function pinchDist(e) {
+  const dx = e.touches[0].clientX - e.touches[1].clientX;
+  const dy = e.touches[0].clientY - e.touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Mouse pan when zoomed
+canvas.addEventListener('mousedown', e => { if (currentZoom > 1) { isPanning = true; panStart = { x: e.clientX - panX, y: e.clientY - panY }; } });
+window.addEventListener('mousemove', e => { if (isPanning && currentZoom > 1) { panX = e.clientX - panStart.x; panY = e.clientY - panStart.y; } });
+window.addEventListener('mouseup', () => setTimeout(() => isPanning = false, 50));
+
+// Mouse wheel zoom
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  currentZoom = Math.max(1, Math.min(4, currentZoom * (e.deltaY < 0 ? 1.1 : 0.9)));
+  document.getElementById('zoom').value = currentZoom * 100;
+  zoomDisplay.textContent = currentZoom.toFixed(1) + '×';
+}, { passive: false });
+
+// Fullscreen
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+fullscreenBtn.addEventListener('click', () => {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!isFs) {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) req.call(el).catch(() => {});
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) exit.call(document);
+  }
+});
+function onFsChange() {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  fullscreenBtn.textContent = isFs ? '✕' : '⛶';
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+
+// Keyboard shortcuts
+window.addEventListener('keydown', e => {
+  if (!playerView.classList.contains('active')) return;
+  if (e.key === ' ') { e.preventDefault(); video.paused ? video.play() : video.pause(); }
+  if (e.key === 'ArrowLeft') video.currentTime -= 10;
+  if (e.key === 'ArrowRight') video.currentTime += 10;
+  if (e.key === 'ArrowUp') video.volume = Math.min(1, video.volume + 0.1);
+  if (e.key === 'ArrowDown') video.volume = Math.max(0, video.volume - 0.1);
+  if (e.key === 'f' || e.key === 'F') fullscreenBtn.click();
+});
+
+// --- Edit title/description modal ---
+const editModal       = document.getElementById('edit-modal');
+const editTitleEl     = document.getElementById('edit-title');
+const editDescEl      = document.getElementById('edit-desc');
+const editYTTagsEl    = document.getElementById('edit-yt-tags');
+const editYTStatus    = document.getElementById('edit-yt-status');
+const editPushYTBtn   = document.getElementById('edit-push-yt-btn');
+let editCurrentVideo  = null;
+
+document.getElementById('edit-cancel-btn').addEventListener('click', () => editModal.classList.remove('open'));
+editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.remove('open'); });
+
+function openEditModal(v) {
+  editCurrentVideo = v;
+  editTitleEl.value   = v.aiTitle || v.name;
+  editDescEl.value    = v.aiDesc  || '';
+  editYTTagsEl.value  = '';
+  editYTStatus.textContent = '';
+  editPushYTBtn.disabled = !v.ytVideoIds?.length;
+  editPushYTBtn.title = v.ytVideoIds?.length ? `Update ${v.ytVideoIds.length} YouTube upload(s)` : 'Not uploaded to YouTube yet';
+  const linksEl = document.getElementById('edit-yt-links');
+  if (v.ytVideoIds?.length) {
+    linksEl.style.display = '';
+    linksEl.innerHTML = '▶ On YouTube: ' + v.ytVideoIds.map(id => `<a href="https://youtu.be/${id}" target="_blank" style="color:#f66;text-decoration:none">youtu.be/${id}</a>`).join(', ');
+  } else {
+    linksEl.style.display = 'none';
+  }
+  editModal.classList.add('open');
+  editTitleEl.select();
+}
+
+document.getElementById('edit-save-local-btn').addEventListener('click', async () => {
+  if (!editCurrentVideo) return;
+  const title = editTitleEl.value.trim();
+  const desc  = editDescEl.value.trim();
+  await fetch(`/api/describe/${editCurrentVideo.path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, description: desc }),
+  });
+  editCurrentVideo.aiTitle = title;
+  editCurrentVideo.aiDesc  = desc;
+  // Update card title live
+  applyFilters();
+  // Update player if open
+  if (currentVideoPath === editCurrentVideo.path) {
+    nowPlayingTitle.textContent = title;
+    nowPlayingDesc.textContent  = desc;
+    if (desc) nowPlayingDesc.classList.add('visible');
+  }
+  editModal.classList.remove('open');
+});
+
+editPushYTBtn.addEventListener('click', async () => {
+  if (!editCurrentVideo?.ytVideoIds?.length) return;
+  editPushYTBtn.disabled = true;
+  editYTStatus.textContent = 'Updating YouTube…';
+  const title = editTitleEl.value.trim();
+  const desc  = editDescEl.value.trim();
+  const tags  = editYTTagsEl.value.split(',').map(t => t.trim()).filter(Boolean);
+
+  let ok = 0, fail = 0;
+  for (const videoId of editCurrentVideo.ytVideoIds) {
+    const r = await fetch(`/api/youtube/${videoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description: desc, tags }),
+    });
+    r.ok ? ok++ : fail++;
+  }
+  editYTStatus.textContent = fail ? `⚠️ ${ok} updated, ${fail} failed` : `✓ YouTube updated`;
+  editPushYTBtn.disabled = false;
+});
+
+// --- AI describe ---
+function queueDescribe(v, btn) {
+  btn.textContent = '⏳ Thinking…';
+  btn.disabled = true;
+  fetch(`/api/describe/${v.path}`, { method: 'POST' })
+    .then(() => pollDescribe(v, btn));
+}
+
+function pollDescribe(v, btn) {
+  fetch(`/api/describe/${v.path}`).then(r => r.json()).then(d => {
+    if (d.status === 'done') {
+      v.aiTitle = d.title;
+      v.aiDesc  = d.description;
+      btn.textContent = '✨ Re-describe';
+      btn.disabled = false;
+      btn.className = 'ai-btn done';
+      // Update card title
+      const card = btn.closest('.video-card');
+      const nameEl = card.querySelector('.video-name');
+      if (nameEl) nameEl.textContent = d.title;
+      // Add filename subtitle if not already there
+      if (!card.querySelector('.video-filename')) {
+        const sub = document.createElement('div');
+        sub.className = 'video-filename';
+        sub.textContent = v.name;
+        nameEl.after(sub);
+      }
+      // Update player if this video is currently open
+      if (currentVideoPath === v.path) {
+        nowPlayingTitle.textContent = d.title;
+        nowPlayingDesc.textContent = d.description;
+        nowPlayingDesc.classList.add('visible');
+      }
+    } else if (d.status === 'error') {
+      btn.textContent = '✨ Retry';
+      btn.disabled = false;
+    } else {
+      setTimeout(() => pollDescribe(v, btn), 3000);
+    }
+  });
+}
+
+// --- YouTube upload ---
+const ytModal       = document.getElementById('yt-modal');
+const ytTitle       = document.getElementById('yt-title');
+const ytDesc        = document.getElementById('yt-desc');
+const ytPrivacy     = document.getElementById('yt-privacy');
+const ytUploadBtn   = document.getElementById('yt-upload-btn');
+const ytCancelBtn   = document.getElementById('yt-cancel-btn');
+const ytProgressBar = document.getElementById('yt-progress-bar');
+const ytProgressFill= document.getElementById('yt-progress-fill');
+const ytStatusMsg   = document.getElementById('yt-status-msg');
+const ytConnectSection = document.getElementById('yt-connect-section');
+const ytFormSection    = document.getElementById('yt-form-section');
+
+let ytConnected = false;
+let ytCurrentVideo = null;
+let ytCurrentBtn = null;
+
+async function checkYTStatus() {
+  const r = await fetch('/api/youtube/status');
+  const d = await r.json();
+  ytConnected = d.connected;
+}
+checkYTStatus();
+
+// Listen for OAuth popup completing
+window.addEventListener('message', e => {
+  if (e.data === 'yt-authed') { ytConnected = true; showYTForm(); }
+});
+
+document.getElementById('yt-connect-btn').addEventListener('click', () => {
+  window.open('/auth/youtube', 'yt-auth', 'width=500,height=600');
+});
+
+function showYTForm() {
+  ytConnectSection.style.display = 'none';
+  ytFormSection.style.display = '';
+}
+
+async function openYTModal(v, btn) {
+  ytCurrentVideo = v;
+  ytCurrentBtn = btn;
+  ytTitle.value = '';
+  ytDesc.value = '';
+  ytStatusMsg.textContent = '';
+  ytProgressBar.style.display = 'none';
+  ytProgressFill.style.width = '0%';
+  ytUploadBtn.disabled = false;
+  ytUploadBtn.textContent = 'Upload';
+
+  await checkYTStatus();
+  if (!ytConnected) {
+    ytConnectSection.style.display = '';
+    ytFormSection.style.display = 'none';
+  } else {
+    showYTForm();
+    ytStatusMsg.textContent = 'Loading…';
+
+    // Load channels and AI/template meta in parallel
+    const [channels, meta] = await Promise.all([
+      fetch('/api/channels').then(r => r.json()).catch(() => []),
+      fetch(`/api/yt-meta/${v.path}`).then(r => r.json()),
+    ]);
+
+    // Populate channel dropdown
+    const chSel = document.getElementById('yt-channel');
+    chSel.innerHTML = channels.length
+      ? channels.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      : '<option value="">Default channel</option>';
+
+    // Use AI title/description if available, else template
+    ytTitle.value = v.aiTitle || meta.title;
+    ytDesc.value  = v.aiDesc  || meta.description;
+    ytStatusMsg.textContent = v.aiTitle ? '✨ AI title applied — edit freely' : '';
+  }
+  ytModal.classList.add('open');
+}
+
+ytCancelBtn.addEventListener('click', () => ytModal.classList.remove('open'));
+ytModal.addEventListener('click', e => { if (e.target === ytModal) ytModal.classList.remove('open'); });
+
+ytUploadBtn.addEventListener('click', async () => {
+  if (!ytCurrentVideo) return;
+  ytUploadBtn.disabled = true;
+  ytUploadBtn.textContent = 'Starting…';
+  ytProgressBar.style.display = 'block';
+  ytStatusMsg.textContent = 'Uploading…';
+  if (ytCurrentBtn) { ytCurrentBtn.textContent = '▶ Uploading…'; ytCurrentBtn.className = 'yt-btn uploading'; }
+
+  const r = await fetch(`/api/upload/${ytCurrentVideo.path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: ytTitle.value, description: ytDesc.value, privacy: ytPrivacy.value, channelId: document.getElementById('yt-channel').value || null }),
+  });
+  const { uploadId, error } = await r.json();
+  if (error === 'not_connected') { ytStatusMsg.textContent = 'Not connected to YouTube.'; return; }
+
+  // Poll progress
+  const poll = setInterval(async () => {
+    const s = await fetch(`/api/upload-status/${uploadId}`).then(x => x.json());
+    ytProgressFill.style.width = s.progress + '%';
+    ytUploadBtn.textContent = `Uploading ${s.progress}%`;
+
+    if (s.status === 'done') {
+      clearInterval(poll);
+      ytStatusMsg.innerHTML = `Done! <a href="${s.url}" target="_blank" style="color:#f88">${s.url}</a>`;
+      ytUploadBtn.textContent = 'Uploaded ✓';
+      if (ytCurrentBtn) { ytCurrentBtn.textContent = '▶ Uploaded ✓'; ytCurrentBtn.className = 'card-act-btn yt yt-btn done'; }
+      // Store video ID on the video object and refresh the card's link
+      const videoId = s.url.split('/').pop();
+      if (ytCurrentVideo) {
+        if (!ytCurrentVideo.ytVideoIds) ytCurrentVideo.ytVideoIds = [];
+        if (!ytCurrentVideo.ytVideoIds.includes(videoId)) ytCurrentVideo.ytVideoIds.push(videoId);
+      }
+      applyFilters();
+    } else if (s.status === 'error') {
+      clearInterval(poll);
+      ytStatusMsg.textContent = 'Upload failed: ' + s.error;
+      ytUploadBtn.disabled = false;
+      ytUploadBtn.textContent = 'Retry';
+      if (ytCurrentBtn) { ytCurrentBtn.textContent = '▶ YouTube'; ytCurrentBtn.className = 'yt-btn'; }
+    }
+  }, 2000);
+});
+
+// --- Export ---
+document.getElementById('export-btn').addEventListener('click', () => {
+  if (!currentVideoPath) return;
+  const url = `/api/export/${currentVideoPath}?brightness=${brightness}&contrast=${contrast}&saturation=${saturation}&sharpness=${sharpness}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+});
+
+// --- Auto Enhance (DJI flat-profile boost) ---
+document.getElementById('auto-enhance-btn').addEventListener('click', () => {
+  brightness = 110; contrast = 120; saturation = 135; sharpness = 20;
+  document.getElementById('brightness').value = brightness;
+  document.getElementById('contrast').value = contrast;
+  document.getElementById('saturation').value = saturation;
+  document.getElementById('sharpness').value = sharpness;
+});
+
+document.getElementById('reset-enhance-btn').addEventListener('click', resetEnhancements);
+
+// --- Describe All ---
+const describeAllBtn      = document.getElementById('describe-all-btn');
+const describeProgressBar = document.getElementById('describe-progress-bar');
+const describeProgressFill= document.getElementById('describe-progress-fill');
+let describeAllPoll = null;
+
+describeAllBtn.addEventListener('click', async () => {
+  describeAllBtn.disabled = true;
+  describeAllBtn.textContent = '⏳ Queueing…';
+  const r = await fetch('/api/describe-all', { method: 'POST' });
+  const { queued, total } = await r.json();
+  if (queued === 0) {
+    describeAllBtn.textContent = '✨ All done';
+    describeAllBtn.disabled = false;
+    return;
+  }
+  describeProgressBar.style.display = 'block';
+  describeAllBtn.textContent = `⏳ 0 / ${total}`;
+  startDescribeAllPoll(total);
+});
+
+let describeLastCardRefresh = 0;
+
+function startDescribeAllPoll(total) {
+  if (describeAllPoll) clearInterval(describeAllPoll);
+  describeProgressBar.style.display = 'block';
+  describeAllBtn.disabled = true;
+
+  describeAllPoll = setInterval(async () => {
+    let prog;
+    try { prog = await fetch('/api/describe-progress').then(r => r.json()); }
+    catch { return; }
+    const { pending, processing, done } = prog;
+    const effectiveTotal = total || (done + pending + processing);
+    const pct = effectiveTotal ? Math.round((done / effectiveTotal) * 100) : 0;
+    describeProgressFill.style.width = pct + '%';
+    describeAllBtn.textContent = `⏳ ${done} / ${effectiveTotal}`;
+
+    // Refresh card titles at most every 30 seconds
+    const now = Date.now();
+    if (now - describeLastCardRefresh > 30000) {
+      describeLastCardRefresh = now;
+      try {
+        const fresh = await fetch('/api/videos').then(r => r.json());
+        let updated = false;
+        for (const fv of fresh) {
+          const existing = allVideos.find(v => v.path === fv.path);
+          if (existing && fv.aiTitle && existing.aiTitle !== fv.aiTitle) {
+            existing.aiTitle = fv.aiTitle;
+            existing.aiDesc  = fv.aiDesc;
+            updated = true;
+          }
+        }
+        if (updated) applyFilters();
+      } catch {}
+    }
+
+    if (pending === 0 && processing === 0) {
+      clearInterval(describeAllPoll);
+      describeAllPoll = null;
+      describeAllBtn.textContent = `✨ Done (${done})`;
+      describeAllBtn.disabled = false;
+      // Final card refresh
+      try {
+        const fresh = await fetch('/api/videos').then(r => r.json());
+        for (const fv of fresh) {
+          const existing = allVideos.find(v => v.path === fv.path);
+          if (existing && fv.aiTitle) { existing.aiTitle = fv.aiTitle; existing.aiDesc = fv.aiDesc; }
+        }
+        applyFilters();
+      } catch {}
+      setTimeout(() => { describeProgressBar.style.display = 'none'; describeProgressFill.style.width = '0%'; }, 3000);
+    }
+  }, 3000);
+}
+
+loadLibrary().then(async () => {
+  // Auto-resume progress bar if describe-all is already running
+  try {
+    const { pending, processing, done } = await fetch('/api/describe-progress').then(r => r.json());
+    if (pending > 0 || processing > 0) {
+      startDescribeAllPoll(done + pending + processing);
+    }
+  } catch {}
+});
+</script>
+</body>
+</html>

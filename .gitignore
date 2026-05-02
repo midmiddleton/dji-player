@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Secrets & auth tokens
+.env
+yt-token.json
+
+# Video files
+videos/*.MP4
+videos/*.mp4
+videos/*.MOV
+videos/*.mov
+videos/*.AVI
+videos/*.avi
+
+# Generated thumbnails
+public/thumbs/
+
+# Database files (auto-generated at runtime)
+*.db
+*.db-shm
+*.db-wal
+
+# Caches (auto-generated at runtime)
+meta-cache.json
+location-cache.json
+tags.json
+
+# Claude settings
+.claude/
