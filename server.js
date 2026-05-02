@@ -4,7 +4,6 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 const https = require('https');
-const http  = require('http');
 const { execFile, spawn } = require('child_process');
 const Database = require('better-sqlite3');
 const { google } = require('googleapis');
@@ -81,6 +80,52 @@ db.exec(`
     uploaded_at TEXT,
     PRIMARY KEY (path, video_id)
   );
+  CREATE TABLE IF NOT EXISTS tag_yt_links (
+    tag          TEXT PRIMARY KEY,
+    playlist_id  TEXT NOT NULL,
+    playlist_name TEXT,
+    playlist_url  TEXT,
+    privacy       TEXT DEFAULT 'unlisted'
+  );
+  CREATE TABLE IF NOT EXISTS yt_playlists (
+    playlist_id  TEXT PRIMARY KEY,
+    name         TEXT NOT NULL,
+    privacy      TEXT NOT NULL DEFAULT 'unlisted',
+    description  TEXT,
+    url          TEXT,
+    created_at   TEXT
+  );
+  CREATE TABLE IF NOT EXISTS yt_playlist_items (
+    playlist_id  TEXT NOT NULL REFERENCES yt_playlists(playlist_id) ON DELETE CASCADE,
+    video_id     TEXT NOT NULL,
+    PRIMARY KEY  (playlist_id, video_id)
+  );
+  CREATE TABLE IF NOT EXISTS edit_projects (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    storyline   TEXT,
+    created_at  TEXT,
+    updated_at  TEXT
+  );
+  CREATE TABLE IF NOT EXISTS edit_project_clips (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES edit_projects(id) ON DELETE CASCADE,
+    path        TEXT NOT NULL,
+    position    INTEGER NOT NULL DEFAULT 0,
+    trim_in     REAL NOT NULL DEFAULT 0,
+    trim_out    REAL,
+    note        TEXT,
+    UNIQUE(project_id, path)
+  );
+  CREATE TABLE IF NOT EXISTS yt_sync_queue (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    path        TEXT NOT NULL,
+    playlist_id TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending',
+    yt_video_id TEXT,
+    error       TEXT,
+    created_at  TEXT
+  );
 `);
 
 // Prepared statements
@@ -122,6 +167,31 @@ const q = {
   insertYTUpload:     db.prepare('INSERT OR REPLACE INTO yt_uploads (path, video_id, channel_id, uploaded_at) VALUES (?, ?, ?, ?)'),
   getYTUploads:       db.prepare('SELECT video_id, channel_id FROM yt_uploads WHERE path = ?'),
   allYTUploads:       db.prepare('SELECT path, video_id FROM yt_uploads'),
+  allTagLinks:        db.prepare('SELECT * FROM tag_yt_links ORDER BY tag'),
+  getTagLink:         db.prepare('SELECT * FROM tag_yt_links WHERE tag = ?'),
+  upsertTagLink:      db.prepare('INSERT OR REPLACE INTO tag_yt_links (tag, playlist_id, playlist_name, playlist_url, privacy) VALUES (?, ?, ?, ?, ?)'),
+  deleteTagLink:      db.prepare('DELETE FROM tag_yt_links WHERE tag = ?'),
+  allYTPlaylists:     db.prepare('SELECT * FROM yt_playlists ORDER BY created_at DESC'),
+  upsertYTPlaylist:   db.prepare('INSERT OR REPLACE INTO yt_playlists (playlist_id, name, privacy, description, url, created_at) VALUES (?, ?, ?, ?, ?, ?)'),
+  deleteYTPlaylist:   db.prepare('DELETE FROM yt_playlists WHERE playlist_id = ?'),
+  playlistItems:      db.prepare('SELECT video_id FROM yt_playlist_items WHERE playlist_id = ?'),
+  addPlaylistItem:    db.prepare('INSERT OR IGNORE INTO yt_playlist_items (playlist_id, video_id) VALUES (?, ?)'),
+  removePlaylistItem: db.prepare('DELETE FROM yt_playlist_items WHERE playlist_id = ? AND video_id = ?'),
+  videoInPlaylists:   db.prepare('SELECT playlist_id FROM yt_playlist_items WHERE video_id = ?'),
+  allProjects:        db.prepare('SELECT id, name, storyline, created_at, updated_at FROM edit_projects ORDER BY updated_at DESC'),
+  insertProject:      db.prepare('INSERT INTO edit_projects (name, storyline, created_at, updated_at) VALUES (?, ?, ?, ?)'),
+  updateProject:      db.prepare('UPDATE edit_projects SET name=?, storyline=?, updated_at=? WHERE id=?'),
+  deleteProject:      db.prepare('DELETE FROM edit_projects WHERE id=?'),
+  projectClips:       db.prepare('SELECT * FROM edit_project_clips WHERE project_id=? ORDER BY position'),
+  insertClip:         db.prepare('INSERT OR IGNORE INTO edit_project_clips (project_id, path, position, trim_in, trim_out) VALUES (?, ?, ?, ?, ?)'),
+  updateClip:         db.prepare('UPDATE edit_project_clips SET position=?, trim_in=?, trim_out=?, note=? WHERE id=?'),
+  deleteClip:         db.prepare('DELETE FROM edit_project_clips WHERE id=?'),
+  reorderClips:       db.prepare('UPDATE edit_project_clips SET position=? WHERE id=?'),
+  insertSyncItem:     db.prepare("INSERT INTO yt_sync_queue (path, playlist_id, status, created_at) VALUES (?, ?, 'pending', ?)"),
+  nextSyncItem:       db.prepare("SELECT * FROM yt_sync_queue WHERE status='pending' ORDER BY id LIMIT 1"),
+  updateSyncItem:     db.prepare('UPDATE yt_sync_queue SET status=?, yt_video_id=?, error=? WHERE id=?'),
+  countSyncQueue:     db.prepare("SELECT status, COUNT(*) as n FROM yt_sync_queue GROUP BY status"),
+  syncQueueForTag:    db.prepare("SELECT path FROM yt_sync_queue WHERE playlist_id=? AND status IN ('pending','processing')"),
 };
 
 // --- Transcription worker ---
@@ -519,7 +589,10 @@ app.get('/auth/youtube', (_req, res) => {
   const auth = makeOAuth2();
   const url = auth.generateAuthUrl({
     access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/youtube.upload'],
+    scope: [
+      'https://www.googleapis.com/auth/youtube.upload',
+      'https://www.googleapis.com/auth/youtube',
+    ],
     prompt: 'consent',
   });
   res.redirect(url);
@@ -566,13 +639,16 @@ app.post('/api/upload/:encodedPath', async (req, res) => {
   uploads[uploadId] = { status: 'uploading', progress: 0 };
   res.json({ uploadId });
 
+  // YouTube rejects < and > in title/description
+  const safeTitle = (title || 'Untitled').replace(/[<>]/g, '').slice(0, 100).trim() || 'Untitled';
+  const safeDesc  = (description || '').replace(/[<>]/g, '').slice(0, 5000);
+
   const stat = fs.statSync(resolved);
   try {
     const response = await yt.videos.insert({
       part: ['snippet', 'status'],
-      ...(channelId ? { onBehalfOfContentOwnerChannel: channelId } : {}),
       requestBody: {
-        snippet: { title, description, categoryId: '22' },
+        snippet: { title: safeTitle, description: safeDesc, categoryId: '22' },
         status:  { privacyStatus: privacy },
       },
       media: {
@@ -588,6 +664,21 @@ app.post('/api/upload/:encodedPath', async (req, res) => {
     uploads[uploadId] = { status: 'done', progress: 100, url: `https://youtu.be/${videoId}` };
     q.insertYTUpload.run(resolved, videoId, channelId || null, new Date().toISOString());
     console.log(`Uploaded to YouTube: ${title} → https://youtu.be/${videoId}`);
+    // Auto-add to any YouTube playlists linked to this video's tags
+    const videoTags = q.getTags.all(resolved).map(r => r.tag);
+    for (const tag of videoTags) {
+      const link = q.getTagLink.get(tag);
+      if (link) {
+        try {
+          await yt.playlistItems.insert({
+            part: ['snippet'],
+            requestBody: { snippet: { playlistId: link.playlist_id, resourceId: { kind: 'youtube#video', videoId } } },
+          });
+          q.addPlaylistItem.run(link.playlist_id, videoId);
+          console.log(`Auto-added to playlist "${link.playlist_name}" (tag: ${tag})`);
+        } catch (e) { console.error(`Auto-add to playlist failed (${tag}):`, e.message); }
+      }
+    }
   } catch (e) {
     uploads[uploadId] = { status: 'error', progress: 0, error: e.message };
     console.error('YouTube upload failed:', e.message);
@@ -758,30 +849,20 @@ app.post('/api/transcript/:encodedPath', (req, res) => {
   res.json({ queued: true });
 });
 
-// --- Ollama / AI description ---
-function ollamaChat(prompt) {
-  return new Promise((resolve, reject) => {
-    const body = Buffer.from(JSON.stringify({
-      model: 'llama3.2',
-      messages: [{ role: 'user', content: prompt }],
-      stream: false,
-      format: 'json',
-    }));
-    const req = http.request({
-      hostname: '127.0.0.1', port: 11434, path: '/api/chat', method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': body.length },
-    }, res => {
-      let data = '';
-      res.on('data', d => data += d);
-      res.on('end', () => {
-        try { resolve(JSON.parse(JSON.parse(data).message.content)); }
-        catch (e) { reject(new Error('Ollama parse failed: ' + e.message)); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
+// --- Claude API / AI description ---
+const Anthropic = require('@anthropic-ai/sdk');
+const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
+async function claudeChat(prompt) {
+  const msg = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 256,
+    messages: [{ role: 'user', content: prompt }],
   });
+  const text = msg.content[0].text.trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('No JSON in response: ' + text);
+  return JSON.parse(jsonMatch[0]);
 }
 
 let describing = false;
@@ -841,7 +922,7 @@ Rules:
 
 Respond with JSON only: {"title": "...", "description": "..."}`;
 
-  ollamaChat(prompt)
+  claudeChat(prompt)
     .then(({ title, description }) => {
       q.upsertDesc.run(row.path, title, description, 'done', new Date().toISOString());
       console.log(`Described: ${path.basename(row.path)} → "${title}"`);
@@ -851,6 +932,62 @@ Respond with JSON only: {"title": "...", "description": "..."}`;
       q.upsertDesc.run(row.path, null, null, 'error', new Date().toISOString());
     })
     .finally(() => { describing = false; describeNext(); });
+}
+
+// --- YouTube sync worker ---
+let syncing = false;
+
+async function syncNext() {
+  if (syncing) return;
+  const yt = getAuthenticatedYT();
+  if (!yt) return;
+  const row = q.nextSyncItem.get();
+  if (!row) return;
+  syncing = true;
+  q.updateSyncItem.run('processing', null, null, row.id);
+
+  try {
+    // If already uploaded, skip straight to adding to playlist
+    const existing = db.prepare('SELECT video_id FROM yt_uploads WHERE path=? LIMIT 1').get(row.path);
+    let videoId = existing?.video_id;
+
+    if (!videoId) {
+      if (!fs.existsSync(row.path)) throw new Error('File not found: ' + row.path);
+      const desc = q.getDesc.get(row.path);
+      const safeTitle = ((desc?.title || path.basename(row.path)).replace(/[<>]/g, '')).slice(0, 100).trim() || 'Untitled';
+      const safeDesc  = (desc?.description || '').replace(/[<>]/g, '').slice(0, 5000);
+      const response  = await yt.videos.insert({
+        part: ['snippet', 'status'],
+        requestBody: {
+          snippet: { title: safeTitle, description: safeDesc, categoryId: '22' },
+          status:  { privacyStatus: 'unlisted' },
+        },
+        media: { mimeType: 'video/*', body: fs.createReadStream(row.path) },
+      });
+      videoId = response.data.id;
+      q.insertYTUpload.run(row.path, videoId, null, new Date().toISOString());
+      console.log(`Sync-uploaded: ${path.basename(row.path)} → ${videoId}`);
+    }
+
+    // Add to playlist (ignore "already in playlist" errors)
+    try {
+      await yt.playlistItems.insert({
+        part: ['snippet'],
+        requestBody: { snippet: { playlistId: row.playlist_id, resourceId: { kind: 'youtube#video', videoId } } },
+      });
+      q.addPlaylistItem.run(row.playlist_id, videoId);
+    } catch (e) {
+      if (!e.message?.includes('duplicate') && !e.message?.includes('already')) throw e;
+    }
+
+    q.updateSyncItem.run('done', videoId, null, row.id);
+    console.log(`Sync done: ${path.basename(row.path)}`);
+  } catch (e) {
+    q.updateSyncItem.run('error', null, e.message?.slice(0, 500), row.id);
+    console.error(`Sync failed for ${path.basename(row.path)}:`, e.message);
+  }
+  syncing = false;
+  syncNext();
 }
 
 // --- API: Descriptions ---
@@ -975,6 +1112,150 @@ app.post('/api/playlists/suggest', (_req, res) => {
   res.json(suggestions);
 });
 
+// --- API: Edit Projects ---
+
+app.get('/api/projects', (_req, res) => {
+  const projects = q.allProjects.all().map(p => ({
+    ...p,
+    clips: q.projectClips.all(p.id),
+  }));
+  res.json(projects);
+});
+
+app.post('/api/projects', (req, res) => {
+  const { name, storyline } = req.body;
+  if (!name) return res.status(400).send('Name required');
+  const now = new Date().toISOString();
+  const info = q.insertProject.run(name, storyline || null, now, now);
+  res.json({ id: info.lastInsertRowid, name, storyline: storyline || null, clips: [], created_at: now, updated_at: now });
+});
+
+app.put('/api/projects/:id', (req, res) => {
+  const { name, storyline } = req.body;
+  q.updateProject.run(name, storyline || null, new Date().toISOString(), parseInt(req.params.id));
+  res.json({ ok: true });
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+  q.deleteProject.run(parseInt(req.params.id));
+  res.json({ ok: true });
+});
+
+app.post('/api/projects/:id/clips', (req, res) => {
+  const projectId = parseInt(req.params.id);
+  const resolved = path.resolve(decodeURIComponent(req.body.path || ''));
+  if (!VIDEO_DIRS.some(d => resolved.startsWith(path.resolve(d)))) return res.status(403).send('Forbidden');
+  const clips = q.projectClips.all(projectId);
+  const meta = q.getMeta.get(resolved);
+  const duration = meta?.duration || null;
+  q.insertClip.run(projectId, resolved, clips.length, 0, duration);
+  const all = q.projectClips.all(projectId);
+  res.json(all);
+});
+
+app.put('/api/projects/:id/clips/reorder', (req, res) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.status(400).send('order must be array');
+  db.transaction(() => { order.forEach((clipId, i) => q.reorderClips.run(i, clipId)); })();
+  res.json({ ok: true });
+});
+
+app.put('/api/projects/:id/clips/:clipId', (req, res) => {
+  const { trim_in, trim_out, note, position } = req.body;
+  const clip = db.prepare('SELECT * FROM edit_project_clips WHERE id=?').get(parseInt(req.params.clipId));
+  if (!clip || clip.project_id !== parseInt(req.params.id)) return res.status(404).send('Not found');
+  q.updateClip.run(
+    position ?? clip.position,
+    trim_in  ?? clip.trim_in,
+    trim_out !== undefined ? trim_out : clip.trim_out,
+    note     !== undefined ? note     : clip.note,
+    clip.id
+  );
+  res.json({ ok: true });
+});
+
+app.delete('/api/projects/:id/clips/:clipId', (req, res) => {
+  q.deleteClip.run(parseInt(req.params.clipId));
+  res.json({ ok: true });
+});
+
+// --- API: YouTube Playlists ---
+
+app.get('/api/yt-playlists', (_req, res) => {
+  const playlists = q.allYTPlaylists.all().map(pl => ({
+    ...pl,
+    videoIds: q.playlistItems.all(pl.playlist_id).map(r => r.video_id),
+  }));
+  res.json(playlists);
+});
+
+app.post('/api/yt-playlists', async (req, res) => {
+  const yt = getAuthenticatedYT();
+  if (!yt) return res.status(401).json({ error: 'not_connected' });
+  const { name, description, privacy } = req.body;
+  if (!name) return res.status(400).send('Name required');
+  try {
+    const r = await yt.playlists.insert({
+      part: ['snippet', 'status'],
+      requestBody: {
+        snippet: { title: name, description: description || '' },
+        status: { privacyStatus: privacy || 'unlisted' },
+      },
+    });
+    const pl = r.data;
+    const url = `https://www.youtube.com/playlist?list=${pl.id}`;
+    q.upsertYTPlaylist.run(pl.id, pl.snippet.title, pl.status.privacyStatus, description || null, url, new Date().toISOString());
+    res.json({ playlist_id: pl.id, name: pl.snippet.title, privacy: pl.status.privacyStatus, url, videoIds: [] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/yt-playlists/:playlistId', async (req, res) => {
+  const yt = getAuthenticatedYT();
+  if (!yt) return res.status(401).json({ error: 'not_connected' });
+  try {
+    await yt.playlists.delete({ id: req.params.playlistId });
+    q.deleteYTPlaylist.run(req.params.playlistId);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/yt-playlists/:playlistId/items', async (req, res) => {
+  const yt = getAuthenticatedYT();
+  if (!yt) return res.status(401).json({ error: 'not_connected' });
+  const { videoId } = req.body;
+  if (!videoId) return res.status(400).send('videoId required');
+  try {
+    await yt.playlistItems.insert({
+      part: ['snippet'],
+      requestBody: {
+        snippet: {
+          playlistId: req.params.playlistId,
+          resourceId: { kind: 'youtube#video', videoId },
+        },
+      },
+    });
+    q.addPlaylistItem.run(req.params.playlistId, videoId);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/yt-playlists/:playlistId/items/:videoId', async (req, res) => {
+  const yt = getAuthenticatedYT();
+  if (!yt) return res.status(401).json({ error: 'not_connected' });
+  try {
+    // Find the playlistItem id first
+    const items = await yt.playlistItems.list({
+      part: ['id'],
+      playlistId: req.params.playlistId,
+      videoId: req.params.videoId,
+    });
+    const itemId = items.data.items?.[0]?.id;
+    if (itemId) await yt.playlistItems.delete({ id: itemId });
+    q.removePlaylistItem.run(req.params.playlistId, req.params.videoId);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // --- API: Update YouTube video metadata ---
 app.put('/api/youtube/:videoId', async (req, res) => {
   const yt = getAuthenticatedYT();
@@ -995,6 +1276,56 @@ app.put('/api/youtube/:videoId', async (req, res) => {
     });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- API: Tag-playlist links ---
+app.get('/api/tag-links', (_req, res) => {
+  res.json(q.allTagLinks.all());
+});
+
+app.post('/api/tag-links', (req, res) => {
+  const { tag, playlist_id, playlist_name, playlist_url, privacy } = req.body;
+  if (!tag || !playlist_id) return res.status(400).send('tag and playlist_id required');
+  q.upsertTagLink.run(tag, playlist_id, playlist_name || null, playlist_url || null, privacy || 'unlisted');
+  res.json({ ok: true });
+});
+
+app.delete('/api/tag-links/:tag', (req, res) => {
+  q.deleteTagLink.run(decodeURIComponent(req.params.tag));
+  res.json({ ok: true });
+});
+
+app.post('/api/tag-links/:tag/sync', (req, res) => {
+  const tag = decodeURIComponent(req.params.tag);
+  const link = q.getTagLink.get(tag);
+  if (!link) return res.status(404).send('No playlist linked to this tag');
+
+  const paths = db.prepare('SELECT path FROM tags WHERE tag=?').all(tag).map(r => r.path);
+  const inPlaylist = new Set(q.playlistItems.all(link.playlist_id).map(r => r.video_id));
+  const queuedPaths = new Set(q.syncQueueForTag.all(link.playlist_id).map(r => r.path));
+
+  let queued = 0;
+  for (const p of paths) {
+    if (queuedPaths.has(p)) continue;
+    const upload = db.prepare('SELECT video_id FROM yt_uploads WHERE path=? LIMIT 1').get(p);
+    if (upload?.video_id && inPlaylist.has(upload.video_id)) continue;
+    q.insertSyncItem.run(p, link.playlist_id, new Date().toISOString());
+    queued++;
+  }
+
+  syncNext();
+  res.json({ queued, total: paths.length, playlist_name: link.playlist_name });
+});
+
+app.get('/api/sync-progress', (_req, res) => {
+  const counts = {};
+  for (const r of q.countSyncQueue.all()) counts[r.status] = r.n;
+  res.json({
+    pending:    counts.pending    || 0,
+    processing: counts.processing || 0,
+    done:       counts.done       || 0,
+    error:      counts.error      || 0,
+  });
 });
 
 // --- API: YouTube channels ---
@@ -1096,4 +1427,16 @@ app.listen(PORT, '0.0.0.0', async () => {
   pregenerateThumbs();
   predetectCodecs();
   predetectLocations();
+  // Unstick any jobs left in 'processing' state from a previous run
+  db.prepare("UPDATE descriptions SET status='pending' WHERE status='processing'").run();
+  db.prepare("UPDATE yt_sync_queue SET status='pending' WHERE status='processing'").run();
+  // Auto-resume workers if there are pending items
+  describeNext();
+  syncNext();
+  // Seed Traitors Night tag-playlist link
+  if (!q.getTagLink.get('traitors night')) {
+    q.upsertTagLink.run('traitors night', 'PLqKrCZEhNJSJgoQWmb1I6VMb3TB1LDCzh', 'Traitors Night',
+      'https://www.youtube.com/playlist?list=PLqKrCZEhNJSJgoQWmb1I6VMb3TB1LDCzh', 'unlisted');
+    console.log('Seeded Traitors Night tag-playlist link');
+  }
 });
