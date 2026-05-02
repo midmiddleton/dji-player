@@ -45,10 +45,34 @@
   #lock-btn.unlocked { border-color: #f90; color: #f90; }
   #describe-all-btn { background: rgba(80,40,160,.7); border: 1px solid #664; color: #ddf; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
   #describe-all-btn:disabled { opacity: .5; cursor: default; }
-  #tag-filter { display: flex; gap: 6px; padding: 8px 16px; background: #0d0d0d; border-bottom: 1px solid #1a1a1a; overflow-x: auto; flex-shrink: 0; }
+  #projects-btn { background: rgba(0,80,40,.7); border: 1px solid #264; color: #8db; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #yt-playlists-btn { background: rgba(160,0,0,.7); border: 1px solid #622; color: #faa; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #tag-filter { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px; background: #0d0d0d; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
   #tag-filter:empty { display: none; }
   .tag-pill-filter { background: #1e1e1e; border: 1px solid #333; color: #aaa; padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
   .tag-pill-filter.active { background: #fff; border-color: #fff; color: #000; }
+  .tag-pill-group { display: flex; align-items: center; gap: 2px; }
+  .tag-pill-filter.yt-linked { border-color: #622; color: #f88; background: #200a0a; }
+  .tag-pill-filter.yt-linked.active { background: #c00; border-color: #f00; color: #fff; }
+  .tag-pl-link { color: #f66; font-size: 11px; text-decoration: none; padding: 3px 5px; border-radius: 4px; background: rgba(200,0,0,.15); border: 1px solid #622; white-space: nowrap; }
+  .tag-pl-link:hover { background: rgba(200,0,0,.3); }
+  .tag-sync-btn { color: #f88; font-size: 11px; padding: 3px 6px; border-radius: 4px; background: rgba(200,0,0,.15); border: 1px solid #622; cursor: pointer; white-space: nowrap; }
+  .tag-sync-btn:hover { background: rgba(200,0,0,.3); }
+  #sync-progress-bar { display: none; height: 3px; background: #111; flex-shrink: 0; }
+  #sync-progress-fill { height: 100%; background: #c00; width: 0%; transition: width .5s; }
+  #sync-status-msg { display: none; font-size: 11px; color: #f88; padding: 4px 16px; background: #150505; border-bottom: 1px solid #2a0a0a; flex-shrink: 0; }
+  /* Tag modal YT link section */
+  #tag-pl-section { margin-top: 14px; border-top: 1px solid #2a2a2a; padding-top: 12px; }
+  #tag-pl-section label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  #tag-pl-current { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .tag-pl-name { font-size: 12px; color: #f88; flex: 1; }
+  .tag-pl-unlink-btn { background: rgba(140,0,0,.4); border: 1px solid #622; color: #f88; padding: 3px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .tag-pl-unlink-btn:hover { background: rgba(200,0,0,.5); }
+  #tag-pl-link-row { display: flex; gap: 6px; }
+  #tag-pl-select { flex: 1; background: #111; border: 1px solid #333; color: #eee; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
+  #tag-pl-select:focus { outline: none; border-color: #555; }
+  .tag-pl-link-btn { background: #c00; border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tag-pl-link-btn:hover { background: #e00; }
   .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
   .card-tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: #2a2a2a; color: #aaa; border: 1px solid #333; }
   .card-tag.private { background: #3a1a1a; color: #f66; border-color: #622; }
@@ -87,6 +111,42 @@
   #yt-connect-msg { font-size: 13px; color: #fa0; text-align: center; }
   #yt-connect-btn { width: 100%; background: #222; border: 1px solid #444; color: #eee; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; }
 
+  /* Playlist picker in upload/edit modals */
+  .yt-playlist-section { border-top: 1px solid #222; padding-top: 10px; }
+  .yt-playlist-section label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .yt-playlist-list { display: flex; flex-direction: column; gap: 5px; max-height: 140px; overflow-y: auto; margin-bottom: 6px; }
+  .yt-pl-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #111; border: 1px solid #2a2a2a; border-radius: 6px; cursor: pointer; }
+  .yt-pl-item:hover { border-color: #444; }
+  .yt-pl-item input[type=checkbox] { accent-color: #c00; flex-shrink: 0; }
+  .yt-pl-item-name { font-size: 12px; color: #ccc; flex: 1; }
+  .yt-pl-item-privacy { font-size: 10px; color: #555; }
+  .yt-pl-item-url { font-size: 10px; color: #f44; text-decoration: none; }
+  .yt-pl-item-url:hover { text-decoration: underline; }
+  .yt-new-pl-row { display: flex; gap: 6px; }
+  .yt-new-pl-input { flex: 1; background: #111; border: 1px solid #333; color: #eee; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
+  .yt-new-pl-input:focus { outline: none; border-color: #555; }
+  .yt-new-pl-select { background: #111; border: 1px solid #333; color: #eee; padding: 6px 6px; border-radius: 6px; font-size: 12px; }
+  .yt-new-pl-btn { background: #c00; border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+
+  /* YouTube Playlists management view */
+  #yt-playlists-view { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 150; align-items: center; justify-content: center; padding: 20px; }
+  #yt-playlists-view.open { display: flex; }
+  #yt-playlists-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 100%; max-width: 560px; max-height: 80vh; display: flex; flex-direction: column; gap: 12px; }
+  #yt-playlists-box h3 { font-size: 14px; color: #eee; margin: 0; display: flex; justify-content: space-between; align-items: center; }
+  #yt-pl-close { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; }
+  #yt-pl-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .yt-pl-card { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; }
+  .yt-pl-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .yt-pl-card-name { font-size: 13px; font-weight: 600; color: #eee; flex: 1; }
+  .yt-pl-card-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: #222; color: #aaa; border: 1px solid #333; }
+  .yt-pl-card-badge.unlisted { background: #2a2a00; color: #cc0; border-color: #554400; }
+  .yt-pl-card-badge.public { background: #002a00; color: #0c0; border-color: #004400; }
+  .yt-pl-card-actions { display: flex; gap: 6px; align-items: center; }
+  .yt-pl-share-url { font-size: 11px; color: #888; word-break: break-all; margin-bottom: 8px; }
+  .yt-pl-share-url a { color: #f44; }
+  .yt-pl-video-count { font-size: 11px; color: #555; }
+  .yt-pl-delete-btn { background: rgba(140,0,0,.5); border: 1px solid #622; color: #f88; padding: 3px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+
   /* Tag editor modal */
   #tag-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   #tag-modal.open { display: flex; }
@@ -114,6 +174,7 @@
   #video-wrap { flex: 1; position: relative; overflow: hidden; background: #000; cursor: pointer; }
   canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
   video#src-video { display: none; }
+  video#fallback-video { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
 
   /* Controls */
   #controls { background: linear-gradient(transparent, #000d); padding: 10px 14px 14px; }
@@ -159,6 +220,74 @@
   #transcript-close { background: none; border: none; color: #666; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
   #transcript-body { overflow-y: auto; flex: 1; }
   #transcript-text { font-size: 15px; color: #ddd; line-height: 1.7; white-space: pre-wrap; }
+
+  /* Projects view */
+  #projects-view { display: none; flex-direction: column; height: 100dvh; background: #0a0a0a; }
+  #projects-view.active { display: flex; }
+  #projects-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #111; border-bottom: 1px solid #222; flex-shrink: 0; }
+  #projects-header h2 { font-size: 15px; font-weight: 600; color: #fff; flex: 1; }
+  .proj-header-btn { background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .proj-header-btn:hover { background: #2a2a2a; }
+  #projects-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+
+  /* Project list */
+  #project-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .project-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color .15s; }
+  .project-card:hover { border-color: #555; }
+  .project-card-name { font-size: 14px; font-weight: 600; color: #eee; margin-bottom: 6px; }
+  .project-card-meta { font-size: 12px; color: #555; display: flex; gap: 12px; }
+  .project-card-storyline { font-size: 12px; color: #666; margin-top: 8px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .project-card-actions { display: flex; gap: 6px; margin-top: 12px; }
+  .proj-card-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .proj-card-btn:hover { background: #2a2a2a; color: #eee; }
+  .proj-card-btn.red { background: rgba(140,0,0,.5); border-color: transparent; color: #f88; }
+
+  /* Project editor */
+  #project-editor { display: none; flex-direction: column; height: 100%; }
+  #project-editor.active { display: flex; }
+  #editor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-shrink: 0; }
+  #editor-back-btn { background: none; border: 1px solid #333; color: #888; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #editor-name { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: inherit; }
+  #editor-name:focus { outline: none; border-color: #555; }
+  #editor-save-btn { background: #1a4a1a; border: 1px solid #2a6a2a; color: #8f8; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #editor-storyline { width: 100%; background: #111; border: 1px solid #222; color: #aaa; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; margin-bottom: 14px; flex-shrink: 0; line-height: 1.5; }
+  #editor-storyline:focus { outline: none; border-color: #444; }
+  #editor-clips-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
+  #editor-clips-header h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: .05em; flex: 1; }
+  #editor-clips { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  #editor-empty { color: #444; font-size: 13px; text-align: center; padding: 40px 0; }
+
+  /* Clip rows */
+  .clip-row { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; display: flex; gap: 0; overflow: hidden; position: relative; }
+  .clip-row.drag-over { border-color: #668; background: #1a1a2a; }
+  .clip-thumb { width: 80px; height: 54px; object-fit: cover; flex-shrink: 0; background: #111; }
+  .clip-body { flex: 1; padding: 8px 10px; min-width: 0; }
+  .clip-title { font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+  .clip-meta { font-size: 11px; color: #555; margin-bottom: 6px; }
+  .clip-trim { display: flex; align-items: center; gap: 8px; }
+  .trim-label { font-size: 10px; color: #555; width: 22px; flex-shrink: 0; }
+  .trim-input { flex: 1; accent-color: #88f; }
+  .trim-val { font-size: 10px; color: #777; width: 38px; text-align: right; flex-shrink: 0; }
+  .clip-note { width: 100%; background: transparent; border: none; border-top: 1px solid #222; color: #666; font-size: 11px; font-family: inherit; padding: 5px 10px; margin-top: 4px; resize: none; outline: none; }
+  .clip-note:focus { color: #aaa; background: #111; }
+  .clip-drag-handle { width: 26px; display: flex; align-items: center; justify-content: center; color: #333; font-size: 16px; cursor: grab; flex-shrink: 0; border-right: 1px solid #222; }
+  .clip-drag-handle:active { cursor: grabbing; }
+  .clip-remove-btn { position: absolute; top: 6px; right: 6px; background: rgba(140,0,0,.6); border: none; color: #f88; border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+  .clip-row:hover .clip-remove-btn { opacity: 1; }
+  .clip-preview-btn { position: absolute; bottom: 6px; right: 6px; background: rgba(0,80,160,.7); border: 1px solid #448; color: #adf; border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; opacity: 0; transition: opacity .15s; white-space: nowrap; }
+  .clip-row:hover .clip-preview-btn { opacity: 1; }
+
+  /* Add-to-project modal */
+  #add-proj-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  #add-proj-modal.open { display: flex; }
+  #add-proj-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
+  #add-proj-box h3 { font-size: 14px; color: #eee; margin: 0; }
+  #add-proj-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+  .add-proj-item { background: #222; border: 1px solid #333; color: #ddd; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+  .add-proj-item:hover { border-color: #555; }
+  .add-proj-count { font-size: 11px; color: #555; }
+  #add-proj-new-btn { background: #1a2a1a; border: 1px solid #2a4a2a; color: #8c8; padding: 9px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: center; }
+  #add-proj-cancel { background: none; border: 1px solid #333; color: #666; padding: 8px; border-radius: 8px; font-size: 13px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -178,12 +307,54 @@
     </select>
     <button id="lock-btn" title="Private videos">🔒</button>
     <button id="describe-all-btn" title="Generate AI titles for all videos">✨ All</button>
+    <button id="projects-btn" title="Edit projects">🎞 Projects</button>
+    <button id="yt-playlists-btn" title="YouTube Playlists">▶ Playlists</button>
   </div>
   <div id="describe-progress-bar" style="display:none;height:3px;background:#111;flex-shrink:0">
     <div id="describe-progress-fill" style="height:100%;background:#88f;width:0%;transition:width .5s"></div>
   </div>
+  <div id="sync-progress-bar"><div id="sync-progress-fill"></div></div>
+  <div id="sync-status-msg"></div>
   <div id="tag-filter"></div>
   <div id="library"></div>
+</div>
+
+<!-- Projects view -->
+<div id="projects-view">
+  <div id="projects-header">
+    <h2>🎞 Edit Projects</h2>
+    <button class="proj-header-btn" id="proj-back-btn">← Library</button>
+    <button class="proj-header-btn" id="proj-new-btn" style="background:#1a3a1a;border-color:#2a5a2a;color:#8d8">+ New Project</button>
+  </div>
+  <div id="projects-body">
+    <div id="project-list"></div>
+    <div id="project-editor">
+      <div id="editor-header">
+        <button id="editor-back-btn">← Projects</button>
+        <input id="editor-name" type="text" placeholder="Project name…" maxlength="80" />
+        <button id="editor-save-btn">Save</button>
+      </div>
+      <textarea id="editor-storyline" rows="2" placeholder="Storyline / notes — what's the story you're telling with these clips?"></textarea>
+      <div id="editor-clips-header">
+        <h3>Clips</h3>
+        <span id="editor-clip-count" style="font-size:12px;color:#555"></span>
+        <span id="editor-total-dur" style="font-size:12px;color:#555"></span>
+      </div>
+      <div id="editor-clips">
+        <div id="editor-empty">No clips yet — add videos from the library using the + Project button on each card.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add to project modal -->
+<div id="add-proj-modal">
+  <div id="add-proj-box">
+    <h3>Add to Project</h3>
+    <div id="add-proj-list"></div>
+    <button id="add-proj-new-btn">+ Create new project</button>
+    <button id="add-proj-cancel">Cancel</button>
+  </div>
 </div>
 
 <!-- Edit title/description modal -->
@@ -204,6 +375,19 @@
       <input id="edit-yt-tags" type="text" placeholder="drone, travel, brisbane" />
     </div>
     <div id="edit-yt-status"></div>
+    <div id="edit-pl-section" class="yt-playlist-section" style="display:none">
+      <label>YouTube Playlists</label>
+      <div id="edit-pl-list" class="yt-playlist-list"></div>
+      <div class="yt-new-pl-row">
+        <input id="edit-new-pl-name" class="yt-new-pl-input" type="text" placeholder="New playlist name…" />
+        <select id="edit-new-pl-privacy" class="yt-new-pl-select">
+          <option value="unlisted">Unlisted</option>
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+        <button id="edit-new-pl-btn" class="yt-new-pl-btn">+ Create</button>
+      </div>
+    </div>
     <div id="edit-modal-actions">
       <button id="edit-cancel-btn">Cancel</button>
       <button class="edit-save-btn" id="edit-save-local-btn">Save</button>
@@ -241,6 +425,19 @@
           <option value="public">Public</option>
         </select>
       </div>
+      <div class="yt-playlist-section">
+        <label>Add to Playlist</label>
+        <div id="yt-upload-pl-list" class="yt-playlist-list"></div>
+        <div class="yt-new-pl-row">
+          <input id="yt-upload-new-pl-name" class="yt-new-pl-input" type="text" placeholder="New playlist name…" />
+          <select id="yt-upload-new-pl-privacy" class="yt-new-pl-select">
+            <option value="unlisted">Unlisted</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+          <button id="yt-upload-new-pl-btn" class="yt-new-pl-btn">+ Create</button>
+        </div>
+      </div>
       <div id="yt-progress-bar"><div id="yt-progress-fill"></div></div>
       <div id="yt-status-msg"></div>
       <div id="yt-modal-actions">
@@ -248,6 +445,23 @@
         <button id="yt-upload-btn">Upload</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- YouTube Playlists management -->
+<div id="yt-playlists-view">
+  <div id="yt-playlists-box">
+    <h3>▶ YouTube Playlists <button id="yt-pl-close">✕</button></h3>
+    <div class="yt-new-pl-row">
+      <input id="yt-pl-new-name" class="yt-new-pl-input" type="text" placeholder="New playlist name…" />
+      <select id="yt-pl-new-privacy" class="yt-new-pl-select">
+        <option value="unlisted">Unlisted</option>
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+      </select>
+      <button id="yt-pl-new-btn" class="yt-new-pl-btn">+ Create</button>
+    </div>
+    <div id="yt-pl-list"></div>
   </div>
 </div>
 
@@ -261,6 +475,19 @@
       <input id="tag-input" type="text" placeholder="Add tag…" />
       <button id="tag-add-btn">Add</button>
     </div>
+    <div id="tag-pl-section">
+      <label>YouTube Playlist</label>
+      <div id="tag-pl-current" style="display:none">
+        <span class="tag-pl-name" id="tag-pl-linked-name"></span>
+        <a id="tag-pl-linked-url" class="tag-pl-link" href="#" target="_blank">↗ Open</a>
+        <button class="tag-pl-unlink-btn" id="tag-pl-unlink-btn">Unlink</button>
+      </div>
+      <div id="tag-pl-link-row" style="display:none">
+        <select id="tag-pl-select"><option value="">Select playlist…</option></select>
+        <button class="tag-pl-link-btn" id="tag-pl-link-btn">Link</button>
+      </div>
+      <div id="tag-pl-no-yt" style="font-size:11px;color:#555;display:none">Connect YouTube to link playlists.</div>
+    </div>
     <button id="tag-modal-close">Done</button>
   </div>
 </div>
@@ -271,6 +498,7 @@
   <div id="video-wrap" id="video-container">
     <video id="src-video" playsinline></video>
     <canvas id="canvas"></canvas>
+    <video id="fallback-video" playsinline controls></video>
   </div>
 
   <div id="enhancements">
@@ -363,6 +591,7 @@ const zoomDisplay = document.getElementById('zoom-display');
 
 let allVideos = [];
 let allTags = {};
+let tagLinks = {}; // tag → { playlist_id, playlist_name, playlist_url, privacy }
 let activeTagFilter = null;
 let activeLocFilter = null;
 let privateUnlocked = false;
@@ -373,16 +602,20 @@ let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let brightness = 100, contrast = 100, saturation = 100, sharpness = 0;
 let currentVideoPath = null;
+let playerReturnTo = 'library'; // 'library' or 'project'
 
 // --- Library ---
 async function loadLibrary() {
-  const [vRes, tRes] = await Promise.all([fetch('/api/videos'), fetch('/api/tags')]);
+  const [vRes, tRes, tlRes] = await Promise.all([fetch('/api/videos'), fetch('/api/tags'), fetch('/api/tag-links')]);
   allVideos = await vRes.json();
   allTags = await tRes.json();
   // Also seed allTags from the video response (in case tags changed mid-session)
   for (const v of allVideos) {
     if (v.tags && v.tags.length) allTags[v.path] = v.tags;
   }
+  const tlList = await tlRes.json();
+  tagLinks = {};
+  for (const tl of tlList) tagLinks[tl.tag] = tl;
   renderTagFilter();
   applyFilters();
 }
@@ -406,8 +639,8 @@ function sortedVideos(videos) {
 
 function renderTagFilter() {
   const tagCounts = {};
-  for (const tags of Object.values(allTags)) {
-    for (const t of tags) {
+  for (const v of allVideos) {
+    for (const t of videoTags(v)) {
       if (t === 'hidden' && !privateUnlocked) continue;
       tagCounts[t] = (tagCounts[t] || 0) + 1;
     }
@@ -436,11 +669,34 @@ function renderTagFilter() {
   });
 
   Object.entries(tagCounts).sort().forEach(([tag, count]) => {
-    const p = document.createElement('button');
-    p.className = 'tag-pill-filter' + (activeTagFilter === tag ? ' active' : '');
-    p.textContent = `${tag} (${count})`;
-    p.onclick = () => { activeTagFilter = tag; activeLocFilter = null; renderTagFilter(); applyFilters(); };
-    row.appendChild(p);
+    const link = tagLinks[tag];
+    const pill = document.createElement('button');
+    pill.className = 'tag-pill-filter' + (activeTagFilter === tag ? ' active' : '') + (link ? ' yt-linked' : '');
+    pill.textContent = (link ? '▶ ' : '') + `${tag} (${count})`;
+    pill.onclick = () => { activeTagFilter = tag; activeLocFilter = null; renderTagFilter(); applyFilters(); };
+
+    if (link) {
+      const group = document.createElement('span');
+      group.className = 'tag-pill-group';
+      group.appendChild(pill);
+      const plUrl = document.createElement('a');
+      plUrl.className = 'tag-pl-link';
+      plUrl.href = link.playlist_url || `https://www.youtube.com/playlist?list=${link.playlist_id}`;
+      plUrl.target = '_blank';
+      plUrl.title = link.playlist_name || 'YouTube Playlist';
+      plUrl.textContent = '↗';
+      plUrl.onclick = e => e.stopPropagation();
+      group.appendChild(plUrl);
+      const syncBtn = document.createElement('button');
+      syncBtn.className = 'tag-sync-btn';
+      syncBtn.textContent = '⬆ Sync';
+      syncBtn.title = `Upload all "${tag}" videos to YouTube playlist`;
+      syncBtn.onclick = e => { e.stopPropagation(); startTagSync(tag, link); };
+      group.appendChild(syncBtn);
+      row.appendChild(group);
+    } else {
+      row.appendChild(pill);
+    }
   });
 }
 
@@ -451,9 +707,10 @@ function renderLibrary(videos) {
     return;
   }
   sortedVideos(videos).forEach(v => {
-    const tags = allTags[v.path] || [];
+    const tags = videoTags(v);
     const card = document.createElement('div');
     card.className = 'video-card';
+    card.dataset.path = v.path;
     const sizeMB = (v.size / 1024 / 1024).toFixed(0);
     const date = new Date(v.modified).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     const dur = v.duration ? fmtDur(v.duration) : '';
@@ -464,7 +721,8 @@ function renderLibrary(videos) {
         <button class="card-act-btn purple ai-btn" title="Generate AI title &amp; description">✨ AI</button>
         <button class="card-act-btn edit-btn" title="Edit title &amp; description">✏️ Edit</button>
         <button class="card-act-btn tag-edit-btn" title="Edit tags">🏷 Tags</button>
-        <button class="card-act-btn yt yt-btn" title="Upload to YouTube">▶ YouTube</button>
+        <button class="card-act-btn green add-proj-btn" title="Add to edit project">+ Project</button>
+        ${!tags.includes('hidden') ? `<button class="card-act-btn yt yt-btn" title="Upload to YouTube">▶ YouTube</button>` : ''}
         <button class="card-act-btn red delete-btn" title="Delete">✕</button>
       </div>
       <div class="video-info">
@@ -496,12 +754,17 @@ function renderLibrary(videos) {
   });
 }
 
+function videoTags(v) {
+  // Check both the live allTags lookup and the tags baked into the video object at load time
+  return allTags[v.path] || v.tags || [];
+}
+
 function applyFilters() {
   const q = searchEl.value.toLowerCase();
   let list = allVideos.filter(v => {
-    const tags = allTags[v.path] || [];
+    const tags = videoTags(v);
     if (tags.includes('hidden') && !privateUnlocked) return false;
-    if (q && !v.name.toLowerCase().includes(q) && !(v.transcript || '').toLowerCase().includes(q)) return false;
+    if (q && !v.name.toLowerCase().includes(q) && !(v.aiTitle || '').toLowerCase().includes(q) && !(v.transcript || '').toLowerCase().includes(q)) return false;
     if (activeTagFilter && !tags.includes(activeTagFilter)) return false;
     if (activeLocFilter && v.location !== activeLocFilter) return false;
     return true;
@@ -549,8 +812,62 @@ function openTagModal(v) {
   renderModalTags();
   renderSuggestions();
   tagInput.value = '';
+  renderTagPlSection();
   tagModal.classList.add('open');
   tagInput.focus();
+}
+
+function renderTagPlSection() {
+  // Show playlist link status for each tag on this video
+  // We show the section for the whole video, not per-tag
+  // Instead, clicking a tag in the modal can open a sub-section
+  // Simplest: show a generic "Link a tag to YouTube" below
+  // Actually: no per-video tag is linked — tag links are global (tag→playlist)
+  // Show: any tags on this video that are linked to playlists
+  const tags = allTags[tagModalVideo.path] || [];
+  const linkedTags = tags.filter(t => tagLinks[t]);
+
+  const section = document.getElementById('tag-pl-section');
+  const currentDiv = document.getElementById('tag-pl-current');
+  const linkRow = document.getElementById('tag-pl-link-row');
+  const noYT = document.getElementById('tag-pl-no-yt');
+
+  // Pick the first linked tag to display (most videos will only have one playlist-linked tag)
+  if (linkedTags.length > 0) {
+    const lTag = linkedTags[0];
+    const link = tagLinks[lTag];
+    document.getElementById('tag-pl-linked-name').textContent = `"${lTag}" → ${link.playlist_name || link.playlist_id}`;
+    const urlEl = document.getElementById('tag-pl-linked-url');
+    urlEl.href = link.playlist_url || `https://www.youtube.com/playlist?list=${link.playlist_id}`;
+    currentDiv.style.display = 'flex';
+    linkRow.style.display = 'none';
+    noYT.style.display = 'none';
+    document.getElementById('tag-pl-unlink-btn').onclick = async () => {
+      await fetch(`/api/tag-links/${encodeURIComponent(lTag)}`, { method: 'DELETE' });
+      delete tagLinks[lTag];
+      renderTagFilter();
+      renderTagPlSection();
+    };
+  } else {
+    currentDiv.style.display = 'none';
+    noYT.style.display = 'none';
+    // Populate playlist dropdown from ytPlaylists (load if needed)
+    if (!ytConnected) {
+      noYT.style.display = 'block';
+      linkRow.style.display = 'none';
+    } else {
+      linkRow.style.display = tags.length ? 'flex' : 'none';
+      if (tags.length) {
+        const sel = document.getElementById('tag-pl-select');
+        loadYTPlaylists().then(() => {
+          sel.innerHTML = '<option value="">Select playlist…</option>' +
+            ytPlaylists.map(pl => `<option value="${esc(pl.playlist_id)}" data-url="${esc(pl.url||'')}" data-name="${esc(pl.name)}" data-privacy="${esc(pl.privacy)}">${esc(pl.name)}</option>`).join('');
+        });
+        // Tag select: choose which tag to link
+        sel.dataset.tags = JSON.stringify(tags);
+      }
+    }
+  }
 }
 
 function renderModalTags() {
@@ -582,9 +899,13 @@ function renderSuggestions() {
 
 function saveTag(tags) {
   allTags[tagModalVideo.path] = tags;
+  // Also update the video object directly so videoTags() picks it up immediately
+  const v = allVideos.find(v => v.path === tagModalVideo.path);
+  if (v) v.tags = tags;
   fetch(`/api/tags/${tagModalVideo.path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags }) });
   renderModalTags();
   renderSuggestions();
+  renderTagPlSection();
   renderTagFilter();
   applyFilters();
 }
@@ -598,6 +919,25 @@ function addTagFromInput() {
   if (!cur.includes(val)) saveTag([...cur, val]);
   tagInput.value = '';
 }
+
+document.getElementById('tag-pl-link-btn').addEventListener('click', async () => {
+  const sel = document.getElementById('tag-pl-select');
+  const plId = sel.value;
+  if (!plId) return;
+  const tags = allTags[tagModalVideo.path] || [];
+  if (!tags.length) return;
+  // Link the first (or only) tag on this video, or let user pick — for simplicity use first non-hidden tag
+  const tag = tags.find(t => t !== 'hidden') || tags[0];
+  const opt = sel.options[sel.selectedIndex];
+  await fetch('/api/tag-links', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tag, playlist_id: plId, playlist_name: opt.dataset.name, playlist_url: opt.dataset.url, privacy: opt.dataset.privacy }),
+  });
+  tagLinks[tag] = { tag, playlist_id: plId, playlist_name: opt.dataset.name, playlist_url: opt.dataset.url, privacy: opt.dataset.privacy };
+  renderTagFilter();
+  renderTagPlSection();
+});
 
 document.getElementById('tag-modal-close').addEventListener('click', () => tagModal.classList.remove('open'));
 tagModal.addEventListener('click', e => { if (e.target === tagModal) tagModal.classList.remove('open'); });
@@ -678,7 +1018,12 @@ document.getElementById('back-btn').addEventListener('click', () => {
   video.src = '';
   cancelAnimationFrame(rafId);
   playerView.classList.remove('active');
-  libraryView.classList.remove('hidden');
+  if (playerReturnTo === 'project') {
+    projectsView.classList.add('active');
+  } else {
+    libraryView.classList.remove('hidden');
+  }
+  playerReturnTo = 'library';
 });
 
 // --- Render loop with enhancements ---
@@ -728,7 +1073,38 @@ function paintFrame(vctx, cw, ch) {
   }
 }
 
+const fallbackVideo = document.getElementById('fallback-video');
+
+// TVs block drawImage(video) → canvas; detect and skip canvas entirely for them
+const isTV = /SMART-TV|Tizen|WebOS|NetCast|NETTV|AppleTV|HbbTV|BRAVIA|Roku|DTV|Android.*TV|Television/i.test(navigator.userAgent);
+let usingFallback = isTV;
+
+function switchToFallback() {
+  if (usingFallback) return;
+  usingFallback = true;
+  cancelAnimationFrame(rafId);
+  canvas.style.display = 'none';
+  fallbackVideo.style.display = 'block';
+  fallbackVideo.src = video.src;
+  fallbackVideo.currentTime = video.currentTime;
+  if (!video.paused) fallbackVideo.play().catch(() => {});
+  fallbackVideo.addEventListener('timeupdate', () => { video.currentTime = fallbackVideo.currentTime; });
+  fallbackVideo.addEventListener('play',  () => video.play().catch(() => {}));
+  fallbackVideo.addEventListener('pause', () => video.pause());
+}
+
 function startRender() {
+  if (usingFallback) {
+    canvas.style.display = 'none';
+    fallbackVideo.style.display = 'block';
+    fallbackVideo.src = video.src;
+    if (!video.paused) fallbackVideo.play().catch(() => {});
+    return;
+  }
+
+  canvas.style.display = 'block';
+  fallbackVideo.style.display = 'none';
+
   function draw() {
     const dpr = window.devicePixelRatio || 1;
     const cw = canvas.offsetWidth;
@@ -751,6 +1127,9 @@ function startRender() {
 // --- Playback controls ---
 canvas.addEventListener('click', (e) => {
   if (!isPanning) video.paused ? video.play() : video.pause();
+});
+fallbackVideo.addEventListener('click', () => {
+  fallbackVideo.paused ? fallbackVideo.play() : fallbackVideo.pause();
 });
 
 playPauseBtn.addEventListener('click', () => video.paused ? video.play() : video.pause());
@@ -922,6 +1301,15 @@ function openEditModal(v) {
     linksEl.innerHTML = '▶ On YouTube: ' + v.ytVideoIds.map(id => `<a href="https://youtu.be/${id}" target="_blank" style="color:#f66;text-decoration:none">youtu.be/${id}</a>`).join(', ');
   } else {
     linksEl.style.display = 'none';
+  }
+  // Show playlist section if video has YouTube uploads
+  const plSection = document.getElementById('edit-pl-section');
+  if (v.ytVideoIds?.length) {
+    plSection.style.display = 'block';
+    editModalVideoIds = v.ytVideoIds;
+    loadYTPlaylists().then(() => renderEditPlaylistPicker());
+  } else {
+    plSection.style.display = 'none';
   }
   editModal.classList.add('open');
   editTitleEl.select();
@@ -1119,13 +1507,15 @@ ytUploadBtn.addEventListener('click', async () => {
       ytStatusMsg.innerHTML = `Done! <a href="${s.url}" target="_blank" style="color:#f88">${s.url}</a>`;
       ytUploadBtn.textContent = 'Uploaded ✓';
       if (ytCurrentBtn) { ytCurrentBtn.textContent = '▶ Uploaded ✓'; ytCurrentBtn.className = 'card-act-btn yt yt-btn done'; }
-      // Store video ID on the video object and refresh the card's link
       const videoId = s.url.split('/').pop();
       if (ytCurrentVideo) {
         if (!ytCurrentVideo.ytVideoIds) ytCurrentVideo.ytVideoIds = [];
         if (!ytCurrentVideo.ytVideoIds.includes(videoId)) ytCurrentVideo.ytVideoIds.push(videoId);
       }
       applyFilters();
+      // Show playlist picker now we have a video ID
+      await loadYTPlaylists();
+      renderUploadPlaylistPicker(videoId);
     } else if (s.status === 'error') {
       clearInterval(poll);
       ytStatusMsg.textContent = 'Upload failed: ' + s.error;
@@ -1235,12 +1625,582 @@ function startDescribeAllPoll(total) {
   }, 3000);
 }
 
+// ============================================================
+// TAG-PLAYLIST SYNC
+// ============================================================
+
+let syncPoll = null;
+
+async function startTagSync(tag, link) {
+  const statusEl = document.getElementById('sync-status-msg');
+  const barEl    = document.getElementById('sync-progress-bar');
+  const fillEl   = document.getElementById('sync-progress-fill');
+
+  statusEl.style.display = 'block';
+  barEl.style.display = 'block';
+  statusEl.textContent = `Queueing "${tag}" videos for YouTube…`;
+
+  const r = await fetch(`/api/tag-links/${encodeURIComponent(tag)}/sync`, { method: 'POST' });
+  if (!r.ok) {
+    const msg = await r.text();
+    statusEl.textContent = `Sync failed: ${msg}`;
+    return;
+  }
+  const { queued, total, playlist_name } = await r.json();
+  if (queued === 0) {
+    statusEl.textContent = `✓ All ${total} videos already in "${playlist_name || link.playlist_name}" — nothing to sync.`;
+    setTimeout(() => { statusEl.style.display = 'none'; barEl.style.display = 'none'; }, 4000);
+    return;
+  }
+  statusEl.textContent = `⬆ Uploading ${queued} video${queued !== 1 ? 's' : ''} to "${playlist_name || link.playlist_name}"…`;
+  pollSyncProgress(queued);
+}
+
+function pollSyncProgress(initialQueued) {
+  if (syncPoll) clearInterval(syncPoll);
+  const statusEl = document.getElementById('sync-status-msg');
+  const barEl    = document.getElementById('sync-progress-bar');
+  const fillEl   = document.getElementById('sync-progress-fill');
+
+  syncPoll = setInterval(async () => {
+    let prog;
+    try { prog = await fetch('/api/sync-progress').then(r => r.json()); }
+    catch { return; }
+    const { pending, processing, done, error } = prog;
+    const total = pending + processing + done + error;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    fillEl.style.width = pct + '%';
+    statusEl.textContent = `⬆ Syncing to YouTube: ${done} / ${total}${error ? ` (${error} failed)` : ''}`;
+
+    if (pending === 0 && processing === 0) {
+      clearInterval(syncPoll);
+      syncPoll = null;
+      statusEl.textContent = `✓ Sync complete: ${done} uploaded${error ? `, ${error} failed` : ''}`;
+      // Refresh library so YouTube links show up on cards
+      try {
+        const fresh = await fetch('/api/videos').then(r => r.json());
+        for (const fv of fresh) {
+          const ex = allVideos.find(v => v.path === fv.path);
+          if (ex) ex.ytVideoIds = fv.ytVideoIds;
+        }
+        applyFilters();
+      } catch {}
+      setTimeout(() => { statusEl.style.display = 'none'; barEl.style.display = 'none'; fillEl.style.width = '0%'; }, 5000);
+    }
+  }, 3000);
+}
+
+// ============================================================
+// YOUTUBE PLAYLISTS
+// ============================================================
+
+let ytPlaylists = [];
+
+async function loadYTPlaylists() {
+  try { ytPlaylists = await fetch('/api/yt-playlists').then(r => r.json()); }
+  catch { ytPlaylists = []; }
+  return ytPlaylists;
+}
+
+function renderPlaylistPicker(containerEl, currentVideoIds, onToggle) {
+  containerEl.innerHTML = ytPlaylists.length ? ytPlaylists.map(pl => `
+    <div class="yt-pl-item">
+      <input type="checkbox" id="plck-${pl.playlist_id}" value="${pl.playlist_id}"
+        ${(currentVideoIds || []).some(vid => pl.videoIds.includes(vid)) ? 'checked' : ''} />
+      <label for="plck-${pl.playlist_id}" class="yt-pl-item-name">${esc(pl.name)}</label>
+      <span class="yt-pl-item-privacy">${pl.privacy}</span>
+      ${pl.url ? `<a class="yt-pl-item-url" href="${pl.url}" target="_blank">↗</a>` : ''}
+    </div>
+  `).join('') : '<div style="font-size:12px;color:#555;padding:4px 0">No playlists yet — create one below.</div>';
+
+  containerEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => onToggle(cb.value, cb.checked));
+  });
+}
+
+async function createPlaylist(name, privacy) {
+  const r = await fetch('/api/yt-playlists', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, privacy }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  const pl = await r.json();
+  ytPlaylists.unshift(pl);
+  return pl;
+}
+
+async function addVideoToPlaylist(playlistId, videoId) {
+  await fetch(`/api/yt-playlists/${playlistId}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ videoId }),
+  });
+  const pl = ytPlaylists.find(p => p.playlist_id === playlistId);
+  if (pl && !pl.videoIds.includes(videoId)) pl.videoIds.push(videoId);
+}
+
+async function removeVideoFromPlaylist(playlistId, videoId) {
+  await fetch(`/api/yt-playlists/${playlistId}/items/${videoId}`, { method: 'DELETE' });
+  const pl = ytPlaylists.find(p => p.playlist_id === playlistId);
+  if (pl) pl.videoIds = pl.videoIds.filter(v => v !== videoId);
+}
+
+// Playlists management modal
+const ytPlaylistsView = document.getElementById('yt-playlists-view');
+document.getElementById('yt-playlists-btn').addEventListener('click', async () => {
+  await loadYTPlaylists();
+  renderPlaylistsView();
+  ytPlaylistsView.classList.add('open');
+});
+document.getElementById('yt-pl-close').addEventListener('click', () => ytPlaylistsView.classList.remove('open'));
+ytPlaylistsView.addEventListener('click', e => { if (e.target === ytPlaylistsView) ytPlaylistsView.classList.remove('open'); });
+
+document.getElementById('yt-pl-new-btn').addEventListener('click', async () => {
+  const name = document.getElementById('yt-pl-new-name').value.trim();
+  const privacy = document.getElementById('yt-pl-new-privacy').value;
+  if (!name) return;
+  try {
+    await createPlaylist(name, privacy);
+    document.getElementById('yt-pl-new-name').value = '';
+    renderPlaylistsView();
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+function renderPlaylistsView() {
+  const listEl = document.getElementById('yt-pl-list');
+  if (!ytPlaylists.length) {
+    listEl.innerHTML = '<div style="color:#555;font-size:13px;text-align:center;padding:20px">No playlists yet.</div>';
+    return;
+  }
+  listEl.innerHTML = ytPlaylists.map(pl => `
+    <div class="yt-pl-card" data-plid="${pl.playlist_id}">
+      <div class="yt-pl-card-header">
+        <span class="yt-pl-card-name">${esc(pl.name)}</span>
+        <span class="yt-pl-card-badge ${pl.privacy}">${pl.privacy}</span>
+        <div class="yt-pl-card-actions">
+          <span class="yt-pl-video-count">${pl.videoIds.length} video${pl.videoIds.length !== 1 ? 's' : ''}</span>
+          <button class="yt-pl-delete-btn" data-plid="${pl.playlist_id}">Delete</button>
+        </div>
+      </div>
+      ${pl.url ? `<div class="yt-pl-share-url">Share link: <a href="${pl.url}" target="_blank">${pl.url}</a></div>` : ''}
+    </div>
+  `).join('');
+
+  listEl.querySelectorAll('.yt-pl-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this YouTube playlist? This removes it from YouTube too.')) return;
+      await fetch(`/api/yt-playlists/${btn.dataset.plid}`, { method: 'DELETE' });
+      ytPlaylists = ytPlaylists.filter(p => p.playlist_id !== btn.dataset.plid);
+      renderPlaylistsView();
+    });
+  });
+}
+
+// Playlist picker in UPLOAD modal
+document.getElementById('yt-upload-new-pl-btn').addEventListener('click', async () => {
+  const name = document.getElementById('yt-upload-new-pl-name').value.trim();
+  const privacy = document.getElementById('yt-upload-new-pl-privacy').value;
+  if (!name) return;
+  try {
+    await createPlaylist(name, privacy);
+    document.getElementById('yt-upload-new-pl-name').value = '';
+    renderUploadPlaylistPicker(null);
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+function renderUploadPlaylistPicker(uploadedVideoId) {
+  const el = document.getElementById('yt-upload-pl-list');
+  renderPlaylistPicker(el, uploadedVideoId ? [uploadedVideoId] : [], async (plId, checked) => {
+    if (!uploadedVideoId) return;
+    if (checked) await addVideoToPlaylist(plId, uploadedVideoId);
+    else await removeVideoFromPlaylist(plId, uploadedVideoId);
+  });
+}
+
+// Playlist picker in EDIT modal
+document.getElementById('edit-new-pl-btn').addEventListener('click', async () => {
+  const name = document.getElementById('edit-new-pl-name').value.trim();
+  const privacy = document.getElementById('edit-new-pl-privacy').value;
+  if (!name) return;
+  try {
+    await createPlaylist(name, privacy);
+    document.getElementById('edit-new-pl-name').value = '';
+    renderEditPlaylistPicker();
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+let editModalVideoIds = [];
+function renderEditPlaylistPicker() {
+  const el = document.getElementById('edit-pl-list');
+  renderPlaylistPicker(el, editModalVideoIds, async (plId, checked) => {
+    for (const vid of editModalVideoIds) {
+      if (checked) await addVideoToPlaylist(plId, vid);
+      else await removeVideoFromPlaylist(plId, vid);
+    }
+  });
+}
+
+// ============================================================
+// PROJECTS
+// ============================================================
+
+const projectsView   = document.getElementById('projects-view');
+const projectList    = document.getElementById('project-list');
+const projectEditor  = document.getElementById('project-editor');
+const editorName     = document.getElementById('editor-name');
+const editorStory    = document.getElementById('editor-storyline');
+const editorClips    = document.getElementById('editor-clips');
+const editorEmpty    = document.getElementById('editor-empty');
+const editorClipCount= document.getElementById('editor-clip-count');
+const editorTotalDur = document.getElementById('editor-total-dur');
+
+let allProjects = [];
+let currentProjectId = null;
+
+function showProjectsView() {
+  libraryView.classList.add('hidden');
+  projectsView.classList.add('active');
+  showProjectList();
+  loadProjects();
+}
+
+function hideProjectsView() {
+  projectsView.classList.remove('active');
+  libraryView.classList.remove('hidden');
+}
+
+function showProjectList() {
+  projectList.style.display = 'grid';
+  projectEditor.classList.remove('active');
+  currentProjectId = null;
+}
+
+function showProjectEditor(project) {
+  currentProjectId = project.id;
+  editorName.value = project.name;
+  editorStory.value = project.storyline || '';
+  projectList.style.display = 'none';
+  projectEditor.classList.add('active');
+  renderEditorClips(project.clips || []);
+}
+
+async function loadProjects() {
+  allProjects = await fetch('/api/projects').then(r => r.json());
+  renderProjectList();
+}
+
+function renderProjectList() {
+  if (!allProjects.length) {
+    projectList.innerHTML = '<div style="color:#444;font-size:13px;text-align:center;padding:60px 0;grid-column:1/-1">No projects yet — click <strong>+ New Project</strong> to get started.</div>';
+    return;
+  }
+  projectList.innerHTML = allProjects.map(p => {
+    const clipCount = (p.clips || []).length;
+    const totalSec = (p.clips || []).reduce((s, c) => {
+      const dur = (c.trim_out || 0) - (c.trim_in || 0);
+      return s + dur;
+    }, 0);
+    const durStr = totalSec > 0 ? fmtDur(totalSec) : '';
+    return `<div class="project-card" data-id="${p.id}">
+      <div class="project-card-name">${esc(p.name)}</div>
+      <div class="project-card-meta">
+        <span>${clipCount} clip${clipCount !== 1 ? 's' : ''}</span>
+        ${durStr ? `<span>${durStr} est.</span>` : ''}
+        <span>${p.updated_at ? new Date(p.updated_at).toLocaleDateString('en-GB') : ''}</span>
+      </div>
+      ${p.storyline ? `<div class="project-card-storyline">${esc(p.storyline)}</div>` : ''}
+      <div class="project-card-actions">
+        <button class="proj-card-btn proj-open-btn">Open</button>
+        <button class="proj-card-btn red proj-delete-btn">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  projectList.querySelectorAll('.project-card').forEach(card => {
+    const id = parseInt(card.dataset.id);
+    card.querySelector('.proj-open-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      const p = allProjects.find(p => p.id === id);
+      if (p) showProjectEditor(p);
+    });
+    card.querySelector('.proj-delete-btn').addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('Delete this project?')) return;
+      await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      await loadProjects();
+    });
+    card.addEventListener('click', () => {
+      const p = allProjects.find(p => p.id === id);
+      if (p) showProjectEditor(p);
+    });
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderEditorClips(clips) {
+  if (!clips.length) {
+    editorClips.innerHTML = '';
+    editorClips.appendChild(editorEmpty);
+    editorEmpty.style.display = 'block';
+    editorClipCount.textContent = '';
+    editorTotalDur.textContent = '';
+    return;
+  }
+  editorEmpty.style.display = 'none';
+  editorClipCount.textContent = `${clips.length} clip${clips.length !== 1 ? 's' : ''}`;
+  const totalSec = clips.reduce((s, c) => s + ((c.trim_out || 0) - (c.trim_in || 0)), 0);
+  editorTotalDur.textContent = totalSec > 0 ? `· ${fmtDur(totalSec)} total` : '';
+
+  editorClips.innerHTML = '';
+  clips.forEach(clip => {
+    const video = allVideos.find(v => v.fullPath === clip.path || v.path === encodeURIComponent(clip.path));
+    const title = video?.aiTitle || video?.name || clip.path.split('/').pop();
+    const duration = video?.duration || clip.trim_out || 60;
+    const trimIn  = clip.trim_in  || 0;
+    const trimOut = clip.trim_out != null ? clip.trim_out : duration;
+
+    const row = document.createElement('div');
+    row.className = 'clip-row';
+    row.dataset.clipId = clip.id;
+    row.draggable = true;
+    row.innerHTML = `
+      <div class="clip-drag-handle" title="Drag to reorder">⠿</div>
+      <img class="clip-thumb" src="/thumb/${encodeURIComponent(clip.path)}" onerror="this.style.display='none'" />
+      <div class="clip-body">
+        <div class="clip-title">${esc(title)}</div>
+        <div class="clip-meta">${video?.duration ? fmtDur(video.duration) : ''} ${video?.location ? '· ' + esc(video.location) : ''}</div>
+        <div class="clip-trim">
+          <span class="trim-label">In</span>
+          <input type="range" class="trim-input trim-in-slider" min="0" max="${duration}" step="0.5" value="${trimIn}" />
+          <span class="trim-val trim-in-val">${fmtDur(trimIn)}</span>
+        </div>
+        <div class="clip-trim">
+          <span class="trim-label">Out</span>
+          <input type="range" class="trim-input trim-out-slider" min="0" max="${duration}" step="0.5" value="${trimOut}" />
+          <span class="trim-val trim-out-val">${fmtDur(trimOut)}</span>
+        </div>
+        <textarea class="clip-note" rows="1" placeholder="Note for this clip…">${esc(clip.note || '')}</textarea>
+      </div>
+      <button class="clip-remove-btn" title="Remove clip">✕</button>
+      <button class="clip-preview-btn" title="Preview clip in player">▶ Preview</button>
+    `;
+
+    // Trim sliders
+    const inSlider  = row.querySelector('.trim-in-slider');
+    const outSlider = row.querySelector('.trim-out-slider');
+    const inVal     = row.querySelector('.trim-in-val');
+    const outVal    = row.querySelector('.trim-out-val');
+
+    inSlider.addEventListener('input', () => {
+      if (parseFloat(inSlider.value) >= parseFloat(outSlider.value)) inSlider.value = parseFloat(outSlider.value) - 0.5;
+      inVal.textContent = fmtDur(parseFloat(inSlider.value));
+    });
+    outSlider.addEventListener('input', () => {
+      if (parseFloat(outSlider.value) <= parseFloat(inSlider.value)) outSlider.value = parseFloat(inSlider.value) + 0.5;
+      outVal.textContent = fmtDur(parseFloat(outSlider.value));
+    });
+
+    const saveClipTrim = async () => {
+      await fetch(`/api/projects/${currentProjectId}/clips/${clip.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trim_in: parseFloat(inSlider.value), trim_out: parseFloat(outSlider.value) }),
+      });
+      // Update total duration display
+      const proj = allProjects.find(p => p.id === currentProjectId);
+      if (proj) { const c = proj.clips.find(c => c.id === clip.id); if (c) { c.trim_in = parseFloat(inSlider.value); c.trim_out = parseFloat(outSlider.value); } }
+      const totalSec = allProjects.find(p => p.id === currentProjectId)?.clips.reduce((s,c) => s + ((c.trim_out||0)-(c.trim_in||0)), 0) || 0;
+      editorTotalDur.textContent = totalSec > 0 ? `· ${fmtDur(totalSec)} total` : '';
+    };
+    inSlider.addEventListener('change', saveClipTrim);
+    outSlider.addEventListener('change', saveClipTrim);
+
+    // Note
+    const noteEl = row.querySelector('.clip-note');
+    noteEl.addEventListener('change', async () => {
+      await fetch(`/api/projects/${currentProjectId}/clips/${clip.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: noteEl.value }),
+      });
+    });
+
+    // Remove
+    row.querySelector('.clip-remove-btn').addEventListener('click', async () => {
+      await fetch(`/api/projects/${currentProjectId}/clips/${clip.id}`, { method: 'DELETE' });
+      const proj = allProjects.find(p => p.id === currentProjectId);
+      if (proj) proj.clips = proj.clips.filter(c => c.id !== clip.id);
+      renderEditorClips(proj?.clips || []);
+    });
+
+    // Preview
+    row.querySelector('.clip-preview-btn').addEventListener('click', () => {
+      const found = allVideos.find(v => v.path === encodeURIComponent(clip.path));
+      const vObj = found || { name: clip.path.split('/').pop(), path: encodeURIComponent(clip.path), aiTitle: null, aiDesc: null };
+      playerReturnTo = 'project';
+      projectsView.classList.remove('active');
+      openVideo(vObj);
+      if (clip.trim_in > 0) {
+        video.addEventListener('loadedmetadata', () => { video.currentTime = clip.trim_in; }, { once: true });
+      }
+    });
+
+    // Drag to reorder
+    row.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', clip.id); row.style.opacity = '.4'; });
+    row.addEventListener('dragend',   () => { row.style.opacity = ''; });
+    row.addEventListener('dragover',  e => { e.preventDefault(); row.classList.add('drag-over'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', async e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+      const targetId  = clip.id;
+      if (draggedId === targetId) return;
+      const proj = allProjects.find(p => p.id === currentProjectId);
+      if (!proj) return;
+      const from = proj.clips.findIndex(c => c.id === draggedId);
+      const to   = proj.clips.findIndex(c => c.id === targetId);
+      const [moved] = proj.clips.splice(from, 1);
+      proj.clips.splice(to, 0, moved);
+      proj.clips.forEach((c, i) => c.position = i);
+      renderEditorClips(proj.clips);
+      await fetch(`/api/projects/${currentProjectId}/clips/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: proj.clips.map(c => c.id) }),
+      });
+    });
+
+    editorClips.appendChild(row);
+  });
+}
+
+// Nav buttons
+document.getElementById('projects-btn').addEventListener('click', showProjectsView);
+document.getElementById('proj-back-btn').addEventListener('click', hideProjectsView);
+document.getElementById('editor-back-btn').addEventListener('click', () => { showProjectList(); loadProjects(); });
+
+// New project
+async function createNewProject(name) {
+  const r = await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name || 'New Project' }),
+  });
+  const p = await r.json();
+  allProjects.unshift(p);
+  return p;
+}
+
+document.getElementById('proj-new-btn').addEventListener('click', async () => {
+  const name = prompt('Project name:');
+  if (!name) return;
+  const p = await createNewProject(name);
+  showProjectEditor(p);
+});
+
+// Save project name/storyline
+document.getElementById('editor-save-btn').addEventListener('click', async () => {
+  if (!currentProjectId) return;
+  await fetch(`/api/projects/${currentProjectId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: editorName.value, storyline: editorStory.value }),
+  });
+  const proj = allProjects.find(p => p.id === currentProjectId);
+  if (proj) { proj.name = editorName.value; proj.storyline = editorStory.value; }
+  document.getElementById('editor-save-btn').textContent = 'Saved ✓';
+  setTimeout(() => { document.getElementById('editor-save-btn').textContent = 'Save'; }, 1500);
+});
+
+// Add-to-project modal (triggered from library cards)
+const addProjModal  = document.getElementById('add-proj-modal');
+const addProjList   = document.getElementById('add-proj-list');
+let addProjVideoPath = null;
+
+async function openAddProjModal(videoPath) {
+  addProjVideoPath = videoPath;
+  if (!allProjects.length) allProjects = await fetch('/api/projects').then(r => r.json());
+  if (!allProjects.length) {
+    const name = prompt('No projects yet. Enter a name for your first project:');
+    if (!name) return;
+    const p = await createNewProject(name);
+    await addClipToProject(p.id, videoPath);
+    return;
+  }
+  addProjList.innerHTML = allProjects.map(p => `
+    <div class="add-proj-item" data-id="${p.id}">
+      <span>${esc(p.name)}</span>
+      <span class="add-proj-count">${(p.clips||[]).length} clips</span>
+    </div>
+  `).join('');
+  addProjList.querySelectorAll('.add-proj-item').forEach(el => {
+    el.addEventListener('click', async () => {
+      await addClipToProject(parseInt(el.dataset.id), videoPath);
+      addProjModal.classList.remove('open');
+    });
+  });
+  addProjModal.classList.add('open');
+}
+
+async function addClipToProject(projectId, videoPath) {
+  const resp = await fetch(`/api/projects/${projectId}/clips`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: videoPath }),
+  });
+  const clips = await resp.json();
+  const proj = allProjects.find(p => p.id === projectId);
+  if (proj) proj.clips = clips;
+  // Brief feedback
+  const btn = document.querySelector(`.add-proj-btn[data-path="${videoPath}"]`);
+  if (btn) { btn.textContent = '✓ Added'; setTimeout(() => { btn.textContent = '+ Project'; }, 1500); }
+}
+
+document.getElementById('add-proj-new-btn').addEventListener('click', async () => {
+  const name = prompt('New project name:');
+  if (!name) return;
+  addProjModal.classList.remove('open');
+  const p = await createNewProject(name);
+  if (addProjVideoPath) await addClipToProject(p.id, addProjVideoPath);
+});
+
+document.getElementById('add-proj-cancel').addEventListener('click', () => addProjModal.classList.remove('open'));
+addProjModal.addEventListener('click', e => { if (e.target === addProjModal) addProjModal.classList.remove('open'); });
+
+// Wire up add-proj-btn clicks from library cards (delegated)
+document.getElementById('library').addEventListener('click', e => {
+  const btn = e.target.closest('.add-proj-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  const card = btn.closest('.video-card');
+  if (card) openAddProjModal(card.dataset.path);
+});
+
+// ============================================================
+
 loadLibrary().then(async () => {
-  // Auto-resume progress bar if describe-all is already running
+  // Auto-resume describe-all progress bar if already running
   try {
     const { pending, processing, done } = await fetch('/api/describe-progress').then(r => r.json());
     if (pending > 0 || processing > 0) {
       startDescribeAllPoll(done + pending + processing);
+    }
+  } catch {}
+  // Auto-resume sync progress bar if already running
+  try {
+    const { pending, processing, done, error } = await fetch('/api/sync-progress').then(r => r.json());
+    if (pending > 0 || processing > 0) {
+      const statusEl = document.getElementById('sync-status-msg');
+      const barEl    = document.getElementById('sync-progress-bar');
+      statusEl.style.display = 'block';
+      barEl.style.display = 'block';
+      statusEl.textContent = `⬆ Syncing to YouTube: ${done} done, ${pending + processing} remaining…`;
+      pollSyncProgress(pending + processing + done + error);
     }
   } catch {}
 });
