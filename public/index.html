@@ -10,43 +10,76 @@
 
   /* Library */
   #library { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; align-content: start; }
-  .video-card { background: #1a1a1a; border-radius: 10px; cursor: pointer; overflow: hidden; min-height: 260px; transition: transform .15s, box-shadow .15s; position: relative; }
+  .video-card { background: #1a1a1a; border-radius: 10px; cursor: pointer; min-height: 330px; transition: transform .15s, box-shadow .15s; position: relative; }
   .video-card:hover, .video-card:active { transform: scale(1.02); box-shadow: 0 4px 20px rgba(255,255,255,.1); }
+  .video-card .thumb-wrap { position: relative; cursor: pointer; overflow: hidden; border-radius: 10px 10px 0 0; }
   .video-card img { display: block; width: 100%; height: 220px; object-fit: cover; }
-  .video-info { padding: 9px 12px 11px; }
-  .video-name { font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; cursor: pointer; }
+  /* Date / duration overlay pills on thumbnail */
+  .thumb-pill { position: absolute; background: rgba(0,0,0,.72); color: #eee; font-size: 11px; padding: 2px 7px; border-radius: 4px; backdrop-filter: blur(2px); white-space: nowrap; pointer-events: none; }
+  .thumb-pill.tl { top: 8px; left: 8px; }
+  .thumb-pill.tr { top: 8px; right: 8px; }
+  .thumb-pill.br { bottom: 8px; right: 8px; font-variant-numeric: tabular-nums; }
+
+  .video-info { padding: 9px 12px 9px; }
+  .video-name { font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; cursor: pointer; }
   .video-name:hover { color: #fff; text-decoration: underline; }
   .video-meta { display: flex; gap: 10px; font-size: 11px; color: #666; }
   .video-location { font-size: 11px; color: #558; margin-top: 3px; }
   .video-filename { font-size: 10px; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .video-yt-link { font-size: 10px; margin-top: 3px; } .video-yt-link a { color: #f44; text-decoration: none; } .video-yt-link a:hover { text-decoration: underline; }
+  .video-yt-link { font-size: 10px; margin-top: 3px; color: #888; }
+  .video-yt-link a { color: #f44; text-decoration: none; }
+  .video-yt-link a:hover { text-decoration: underline; }
+  .video-yt-link .yt-pl-tag { color: #aaa; }
 
-  /* Card action bar — overlays bottom of thumbnail on hover */
-  .card-actions { position: absolute; top: 182px; left: 0; right: 0; height: 38px; background: linear-gradient(transparent, rgba(0,0,0,.75)); display: none; align-items: center; justify-content: space-between; padding: 0 6px; gap: 4px; z-index: 2; }
-  .video-card:hover .card-actions, .video-card:focus-within .card-actions { display: flex; }
-  @media (hover: none) { .card-actions { display: flex; } }
-  .card-act-btn { background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.15); color: #eee; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-  .card-act-btn:hover { background: rgba(255,255,255,.15); }
-  .card-act-btn.red { background: rgba(180,0,0,.7); border-color: transparent; }
-  .card-act-btn.purple { background: rgba(80,40,160,.8); border-color: transparent; color: #ddf; }
-  .card-act-btn.green { background: rgba(0,120,0,.8); border-color: transparent; }
-  .card-act-btn.yt { background: rgba(200,0,0,.8); border-color: transparent; }
+  /* Fixed card action bar under metadata (always visible) */
+  .card-actions { display: flex; gap: 6px; padding: 8px 10px; background: #131313; border-top: 1px solid #1f1f1f; }
+  .card-act-btn { flex: 1; background: #1e1e1e; border: 1px solid #2a2a2a; color: #ccc; border-radius: 6px; padding: 6px 4px; font-size: 12px; cursor: pointer; white-space: nowrap; transition: background .12s, border-color .12s, color .12s; }
+  .card-act-btn:hover { background: #262626; border-color: #3a3a3a; color: #fff; }
+  .card-act-btn.tag-edit-btn.has-tags { color: #ddd; }
+  .card-act-btn.add-proj-btn { color: #8c8; }
+  .card-act-btn.drive-local-btn { color: #888; }
+  .card-act-btn.drive-upload-btn { color: #8c8; background: #122212; border-color: #2a4a2a; }
+  .card-act-btn.card-archive-btn { color: #fc8; }
+  .card-act-btn.card-archive-btn:hover { background: #2a1a08; border-color: #644; }
+  .card-act-btn.edit-btn:hover { color: #ddf; }
 
   /* Player description */
   #now-playing-title { font-size: 13px; color: #ccc; padding: 8px 14px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
   #now-playing-desc { font-size: 12px; color: #666; padding: 4px 14px 0; line-height: 1.5; flex-shrink: 0; max-height: 54px; overflow: hidden; display: none; }
   #now-playing-desc.visible { display: block; }
   .video-meta span { white-space: nowrap; }
-  #search-bar { display: flex; gap: 8px; padding: 12px 16px; background: #111; border-bottom: 1px solid #222; }
-  #search { flex: 1; background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+  #search-bar { display: flex; gap: 8px; padding: 12px 16px; background: #111; border-bottom: 1px solid #222; flex-wrap: wrap; align-items: center; }
+  #search { flex: 1 1 200px; min-width: 140px; background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
   #search:focus { outline: none; border-color: #555; }
   #sort { background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; }
   #lock-btn { background: none; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 8px; font-size: 15px; cursor: pointer; white-space: nowrap; }
   #lock-btn.unlocked { border-color: #f90; color: #f90; }
-  #describe-all-btn { background: rgba(80,40,160,.7); border: 1px solid #664; color: #ddf; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-  #describe-all-btn:disabled { opacity: .5; cursor: default; }
   #projects-btn { background: rgba(0,80,40,.7); border: 1px solid #264; color: #8db; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
   #yt-playlists-btn { background: rgba(160,0,0,.7); border: 1px solid #622; color: #faa; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #archive-btn { background: rgba(120,80,0,.6); border: 1px solid #644; color: #fc8; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #archive-btn:hover { background: rgba(160,100,0,.7); }
+  /* Archive modal */
+  #archive-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  #archive-modal.open { display: flex; }
+  #archive-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 18px; width: 100%; max-width: 640px; max-height: 80vh; display: flex; flex-direction: column; gap: 12px; }
+  #archive-box h3 { font-size: 14px; color: #eee; margin: 0; display: flex; align-items: center; gap: 8px; }
+  #archive-box h3 button { margin-left: auto; background: none; border: none; color: #666; font-size: 20px; cursor: pointer; }
+  #archive-controls { display: flex; gap: 10px; align-items: center; font-size: 12px; color: #888; }
+  #archive-days { width: 60px; background: #111; border: 1px solid #333; color: #eee; padding: 4px 6px; border-radius: 6px; font-size: 12px; }
+  #archive-summary { font-size: 13px; color: #ccc; padding: 8px 0; border-top: 1px solid #222; border-bottom: 1px solid #222; display: flex; justify-content: space-between; gap: 10px; }
+  #archive-summary strong { color: #fc8; }
+  #archive-list { flex: 1; min-height: 100px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .arc-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #111; border: 1px solid #222; border-radius: 6px; font-size: 12px; }
+  .arc-item input { accent-color: #fc8; flex-shrink: 0; }
+  .arc-item-name { flex: 1; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .arc-item-date { color: #555; font-variant-numeric: tabular-nums; }
+  .arc-item-size { color: #888; font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+  #archive-actions { display: flex; gap: 8px; }
+  #archive-select-all { background: #222; border: 1px solid #333; color: #aaa; padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+  #archive-cancel { background: #222; border: 1px solid #333; color: #888; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 1; }
+  #archive-confirm { background: rgba(160,80,0,.7); border: 1px solid #864; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; flex: 2; font-weight: 600; }
+  #archive-confirm:disabled { opacity: .4; cursor: default; }
+  #archive-empty { color: #555; font-size: 13px; text-align: center; padding: 30px 0; }
   #tag-filter { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px; background: #0d0d0d; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
   #tag-filter:empty { display: none; }
   .tag-pill-filter { background: #1e1e1e; border: 1px solid #333; color: #aaa; padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
@@ -58,9 +91,9 @@
   .tag-pl-link:hover { background: rgba(200,0,0,.3); }
   .tag-sync-btn { color: #f88; font-size: 11px; padding: 3px 6px; border-radius: 4px; background: rgba(200,0,0,.15); border: 1px solid #622; cursor: pointer; white-space: nowrap; }
   .tag-sync-btn:hover { background: rgba(200,0,0,.3); }
-  #sync-progress-bar { display: none; height: 3px; background: #111; flex-shrink: 0; }
-  #sync-progress-fill { height: 100%; background: #c00; width: 0%; transition: width .5s; }
-  #sync-status-msg { display: none; font-size: 11px; color: #f88; padding: 4px 16px; background: #150505; border-bottom: 1px solid #2a0a0a; flex-shrink: 0; }
+  #sync-progress-bar { display: none; height: 6px; background: #1a0505; flex-shrink: 0; }
+  #sync-progress-fill { height: 100%; background: linear-gradient(90deg,#a00,#f44); width: 0%; transition: width .5s; }
+  #sync-status-msg { display: none; font-size: 12px; color: #faa; padding: 6px 16px; background: #1a0505; border-bottom: 1px solid #3a1010; flex-shrink: 0; font-weight: 500; }
   /* Tag modal YT link section */
   #tag-pl-section { margin-top: 14px; border-top: 1px solid #2a2a2a; padding-top: 12px; }
   #tag-pl-section label { display: block; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
@@ -171,7 +204,7 @@
   #library-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
   #library-view.hidden { display: none; }
 
-  #video-wrap { flex: 1; position: relative; overflow: hidden; background: #000; cursor: pointer; }
+  #video-wrap { flex: 1; position: relative; overflow: hidden; background: #000; cursor: pointer; touch-action: none; }
   canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
   video#src-video { display: none; }
   video#fallback-video { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
@@ -197,6 +230,20 @@
 
   #now-playing { font-size: 12px; color: #888; padding: 6px 14px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
 
+  /* Video overlay (skip/fullscreen controls) */
+  #video-overlay { position: absolute; inset: 0; display: flex; align-items: stretch; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 5; }
+  #video-overlay.visible { opacity: 1; pointer-events: auto; }
+
+  /* Native fullscreen on the video wrapper */
+  #video-wrap:fullscreen, #video-wrap:-webkit-full-screen { width: 100vw; height: 100vh; background: #000; }
+  #video-wrap:fullscreen canvas, #video-wrap:-webkit-full-screen canvas { width: 100% !important; height: 100% !important; }
+  .ov-zone { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; border: none; color: #fff; transition: background .15s; }
+  .ov-zone:hover, .ov-zone:active { background: rgba(255,255,255,.08); }
+  .ov-badge { display: flex; flex-direction: column; align-items: center; gap: 4px; background: rgba(0,0,0,.55); border-radius: 50%; width: 58px; height: 58px; justify-content: center; font-size: 22px; line-height: 1; }
+  .ov-badge span { font-size: 10px; color: #ccc; }
+  #ov-fs { position: absolute; top: 10px; right: 12px; background: rgba(0,0,0,.55); border: none; color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; line-height: 1; }
+  #ov-fs:hover { background: rgba(0,0,0,.8); }
+
   /* Speed menu */
   #speed-menu { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden; display: none; z-index: 10; }
   #speed-menu button { display: block; width: 100%; padding: 8px 20px; background: none; border: none; color: #eee; cursor: pointer; font-size: 13px; text-align: center; }
@@ -211,6 +258,30 @@
   .action-btn { background: #1e1e1e; border: 1px solid #333; color: #eee; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
   .action-btn:hover { background: #2a2a2a; }
   .action-btn:disabled { opacity: 0.5; cursor: default; }
+  .action-btn.yt-done { color: #f88; border-color: #622; background: #1a0808; }
+  .action-btn.yt-uploading { color: #fa8; border-color: #852; }
+  .action-btn.player-del { color: #f66; border-color: #622; }
+  .action-btn.player-del:hover { background: #2a0808; }
+
+  /* Player info strip */
+  #player-info { padding: 6px 14px 5px; background: #0d0d0d; flex-shrink: 0; border-bottom: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 3px; }
+  .pi-title-row { display: flex; align-items: center; gap: 8px; }
+  #pi-title { font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; flex: 1; }
+  #pi-title:hover { color: #fff; text-decoration: underline; }
+  #pi-edit-link { font-size: 11px; color: #444; cursor: pointer; flex-shrink: 0; }
+  #pi-edit-link:hover { color: #aaa; }
+  .pi-meta-row { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: #555; }
+  .pi-meta-chip.loc { color: #77a; }
+  .pi-tags-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 20px; }
+  .pi-tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: #222; color: #888; border: 1px solid #2a2a2a; cursor: pointer; }
+  .pi-tag:hover { background: #2a2a2a; color: #bbb; border-color: #444; }
+  #pi-tag-add { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: transparent; color: #444; border: 1px dashed #2a2a2a; cursor: pointer; flex-shrink: 0; }
+  #pi-tag-add:hover { color: #888; border-color: #555; }
+  #pi-tag-input-wrap { display: none; align-items: center; gap: 4px; }
+  #pi-tag-input-wrap.visible { display: flex; }
+  #pi-tag-input { background: #111; border: 1px solid #444; color: #eee; padding: 2px 7px; border-radius: 10px; font-size: 11px; width: 90px; }
+  #pi-tag-input:focus { outline: none; border-color: #777; }
+  #pi-tag-confirm { font-size: 10px; background: #333; border: none; color: #fff; padding: 2px 8px; border-radius: 10px; cursor: pointer; }
 
   /* Transcript modal */
   #transcript-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; align-items: flex-end; justify-content: center; padding: 0; }
@@ -250,6 +321,9 @@
   #editor-name { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: inherit; }
   #editor-name:focus { outline: none; border-color: #555; }
   #editor-save-btn { background: #1a4a1a; border: 1px solid #2a6a2a; color: #8f8; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  #editor-kdenlive-btn, #editor-kdenlive-load-btn { background: #1a2a4a; border: 1px solid #2a4a8a; color: #88f; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #editor-kdenlive-btn:hover, #editor-kdenlive-load-btn:hover { background: #223366; }
+  #editor-kdenlive-btn:disabled, #editor-kdenlive-load-btn:disabled { opacity: .5; cursor: default; }
   #editor-storyline { width: 100%; background: #111; border: 1px solid #222; color: #aaa; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; margin-bottom: 14px; flex-shrink: 0; line-height: 1.5; }
   #editor-storyline:focus { outline: none; border-color: #444; }
   #editor-clips-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
@@ -276,6 +350,22 @@
   .clip-row:hover .clip-remove-btn { opacity: 1; }
   .clip-preview-btn { position: absolute; bottom: 6px; right: 6px; background: rgba(0,80,160,.7); border: 1px solid #448; color: #adf; border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; opacity: 0; transition: opacity .15s; white-space: nowrap; }
   .clip-row:hover .clip-preview-btn { opacity: 1; }
+
+  /* GPX panel */
+  #gpx-panel { background: #0e1a0e; border: 1px solid #1e3a1e; border-radius: 10px; margin-bottom: 14px; overflow: hidden; flex-shrink: 0; }
+  #gpx-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #1e3a1e; }
+  #gpx-title { font-size: 13px; color: #8d8; font-weight: 600; flex: 1; }
+  #gpx-stats { font-size: 11px; color: #566; }
+  #gpx-change-btn { background: none; border: 1px solid #2a4a2a; color: #566; border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+  #gpx-body { display: flex; gap: 0; }
+  #gpx-map { flex-shrink: 0; width: 220px; height: 180px; background: #060e06; }
+  #gpx-map .gpx-track { fill: none; stroke: #3a6a3a; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  #gpx-map .gpx-seg { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+  #gpx-charts { flex: 1; display: flex; flex-direction: column; gap: 0; padding: 8px 10px; min-width: 0; }
+  #gpx-hr-chart, #gpx-ele-chart { width: 100%; display: block; }
+  #gpx-clip-stats { padding: 6px 10px 8px; display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #1a2a1a; }
+  .gpx-stat { font-size: 11px; color: #7a9; background: #0a160a; border: 1px solid #1a2a1a; border-radius: 6px; padding: 4px 8px; }
+  .gpx-stat span { color: #beb; font-weight: 600; }
 
   /* Add-to-project modal */
   #add-proj-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
@@ -306,15 +396,16 @@
       <option value="name-asc">Name A–Z</option>
     </select>
     <button id="lock-btn" title="Private videos">🔒</button>
-    <button id="describe-all-btn" title="Generate AI titles for all videos">✨ All</button>
     <button id="projects-btn" title="Edit projects">🎞 Projects</button>
     <button id="yt-playlists-btn" title="YouTube Playlists">▶ Playlists</button>
+    <button id="archive-btn" title="Free up disk by deleting old footage that's safely on Google Drive">🧹 Archive</button>
   </div>
   <div id="describe-progress-bar" style="display:none;height:3px;background:#111;flex-shrink:0">
     <div id="describe-progress-fill" style="height:100%;background:#88f;width:0%;transition:width .5s"></div>
   </div>
   <div id="sync-progress-bar"><div id="sync-progress-fill"></div></div>
   <div id="sync-status-msg"></div>
+  <div id="sdcard-banner" style="display:none;padding:8px 16px;background:#0a1a0a;border-bottom:1px solid #1a4a1a;font-size:13px;color:#8f8;display:none;align-items:center;gap:10px;flex-wrap:wrap"></div>
   <div id="tag-filter"></div>
   <div id="library"></div>
 </div>
@@ -333,8 +424,25 @@
         <button id="editor-back-btn">← Projects</button>
         <input id="editor-name" type="text" placeholder="Project name…" maxlength="80" />
         <button id="editor-save-btn">Save</button>
+        <button id="editor-kdenlive-load-btn" title="Create ~/Videos/{project}/ folder with symlinks and open it">📁 Open folder</button>
+        <button id="editor-kdenlive-btn" title="Open in Kdenlive with clips pre-arranged on timeline">🎬 With timeline</button>
       </div>
       <textarea id="editor-storyline" rows="2" placeholder="Storyline / notes — what's the story you're telling with these clips?"></textarea>
+      <div id="gpx-panel" style="display:none">
+        <div id="gpx-header">
+          <span id="gpx-title">🏃 Run Data</span>
+          <span id="gpx-stats"></span>
+          <button id="gpx-change-btn" title="Change GPX file">📂</button>
+        </div>
+        <div id="gpx-body">
+          <svg id="gpx-map" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet"></svg>
+          <div id="gpx-charts">
+            <canvas id="gpx-hr-chart" height="50"></canvas>
+            <canvas id="gpx-ele-chart" height="40"></canvas>
+          </div>
+          <div id="gpx-clip-stats"></div>
+        </div>
+      </div>
       <div id="editor-clips-header">
         <h3>Clips</h3>
         <span id="editor-clip-count" style="font-size:12px;color:#555"></span>
@@ -360,7 +468,10 @@
 <!-- Edit title/description modal -->
 <div id="edit-modal">
   <div id="edit-modal-box">
-    <h3>✏️ Edit Title &amp; Description</h3>
+    <h3 style="display:flex;align-items:center;gap:10px">
+      <span style="flex:1">✏️ Edit Details</span>
+      <button id="edit-ai-btn" title="Regenerate AI title &amp; description" style="background:rgba(80,40,160,.5);border:1px solid #553a9a;color:#ddf;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">✨ Regenerate</button>
+    </h3>
     <div id="edit-yt-links" style="font-size:12px;color:#888;display:none"></div>
     <div class="edit-field">
       <label>Title</label>
@@ -389,6 +500,7 @@
       </div>
     </div>
     <div id="edit-modal-actions">
+      <button id="edit-delete-btn" title="Delete this clip" style="background:rgba(140,0,0,.4);border:1px solid #622;color:#f88;padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer">✕ Delete</button>
       <button id="edit-cancel-btn">Cancel</button>
       <button class="edit-save-btn" id="edit-save-local-btn">Save</button>
       <button class="edit-yt-btn" id="edit-push-yt-btn" disabled title="Push changes to YouTube">▶ Update YouTube</button>
@@ -465,6 +577,30 @@
   </div>
 </div>
 
+<!-- Archive (free-up-disk) modal -->
+<div id="archive-modal">
+  <div id="archive-box">
+    <h3>🧹 Archive old footage <button id="archive-close">✕</button></h3>
+    <div style="font-size:12px;color:#888;line-height:1.5">
+      Deletes <strong style="color:#fc8">local copies</strong> of old footage that's safely on Google Drive. Hidden videos and clips in active edit projects are always kept.
+    </div>
+    <div id="archive-controls">
+      <label>Older than <input id="archive-days" type="number" min="1" value="60" /> days</label>
+      <span style="flex:1"></span>
+      <button id="archive-select-all">Toggle all</button>
+    </div>
+    <div id="archive-summary">
+      <span id="archive-count">—</span>
+      <span><strong id="archive-size">0</strong> selected</span>
+    </div>
+    <div id="archive-list"></div>
+    <div id="archive-actions">
+      <button id="archive-cancel">Cancel</button>
+      <button id="archive-confirm" disabled>Delete selected</button>
+    </div>
+  </div>
+</div>
+
 <!-- Tag editor modal -->
 <div id="tag-modal">
   <div id="tag-modal-box">
@@ -493,12 +629,29 @@
 </div>
 
 <div id="player-view">
-  <div id="now-playing-title"></div>
-  <div id="now-playing-desc"></div>
-  <div id="video-wrap" id="video-container">
+  <div id="video-wrap">
     <video id="src-video" playsinline></video>
     <canvas id="canvas"></canvas>
     <video id="fallback-video" playsinline controls></video>
+    <div id="video-overlay">
+      <button class="ov-zone" id="ov-back"><div class="ov-badge">⏪<span>10s</span></div></button>
+      <button class="ov-zone" id="ov-fwd"><div class="ov-badge">⏩<span>10s</span></div></button>
+      <button id="ov-fs">⛶</button>
+    </div>
+  </div>
+
+  <div id="player-info">
+    <div class="pi-title-row">
+      <span id="pi-title">—</span>
+      <span id="pi-edit-link" title="Edit details">✏️</span>
+    </div>
+    <div class="pi-meta-row" id="pi-meta-row"></div>
+    <div class="pi-tags-row" id="pi-tags-row">
+      <div id="pi-tag-input-wrap">
+        <input id="pi-tag-input" type="text" placeholder="tag…" />
+        <button id="pi-tag-confirm">Add</button>
+      </div>
+    </div>
   </div>
 
   <div id="enhancements">
@@ -525,10 +678,14 @@
   </div>
 
   <div id="player-actions">
-    <button class="action-btn" id="export-btn">⬇ Export</button>
+    <button class="action-btn" id="player-yt-btn">▶ YouTube</button>
+    <button class="action-btn" id="player-proj-btn">+ Project</button>
+    <button class="action-btn player-del" id="player-delete-btn">✕ Delete</button>
     <button class="action-btn" id="transcript-btn">📝 Transcribe</button>
-    <button class="action-btn" id="auto-enhance-btn">✨ Auto Enhance</button>
+    <button class="action-btn" id="export-btn">⬇ Export</button>
+    <button class="action-btn" id="auto-enhance-btn">✨ Auto</button>
     <button class="action-btn" id="reset-enhance-btn">↺ Reset</button>
+    <button class="action-btn" id="gpx-overlay-btn" style="display:none">📍 Stats: On</button>
   </div>
 
   <div id="controls">
@@ -585,11 +742,33 @@ const progressFill = document.getElementById('progress-fill');
 const progressThumb = document.getElementById('progress-thumb');
 const progressWrap = document.getElementById('progress-wrap');
 const timeDisplay = document.getElementById('time-display');
-const nowPlayingTitle = document.getElementById('now-playing-title');
-const nowPlayingDesc  = document.getElementById('now-playing-desc');
+const nowPlayingTitle = document.getElementById('pi-title');
 const zoomDisplay = document.getElementById('zoom-display');
 
-let allVideos = [];
+let allVideos  = [];
+let currentPlayerVideo = null;
+let driveIndex = new Set(); // filenames confirmed on Google Drive
+const driveUploading = new Set(); // filenames currently uploading (poll until confirmed)
+
+async function pollDriveUpload(filename) {
+  const INTERVAL = 15000, TIMEOUT = 40 * 60 * 1000; // poll every 15s, give up after 40min
+  const deadline = Date.now() + TIMEOUT;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, INTERVAL));
+    try {
+      const files = await fetch('/api/drive/index').then(r => r.json());
+      driveIndex = new Set(files.map(f => f.filename));
+      if (driveIndex.has(filename)) {
+        driveUploading.delete(filename);
+        applyFilters();
+        return;
+      }
+    } catch {}
+  }
+  // Timed out — clear uploading state so user can retry
+  driveUploading.delete(filename);
+  applyFilters();
+}
 let allTags = {};
 let tagLinks = {}; // tag → { playlist_id, playlist_name, playlist_url, privacy }
 let activeTagFilter = null;
@@ -606,7 +785,8 @@ let playerReturnTo = 'library'; // 'library' or 'project'
 
 // --- Library ---
 async function loadLibrary() {
-  const [vRes, tRes, tlRes] = await Promise.all([fetch('/api/videos'), fetch('/api/tags'), fetch('/api/tag-links')]);
+  const [vRes, tRes, tlRes, driveRes] = await Promise.all([fetch('/api/videos'), fetch('/api/tags'), fetch('/api/tag-links'), fetch('/api/drive/index')]);
+  driveIndex = new Set((await driveRes.json()).map(f => f.filename));
   allVideos = await vRes.json();
   allTags = await tRes.json();
   // Also seed allTags from the video response (in case tags changed mid-session)
@@ -711,45 +891,126 @@ function renderLibrary(videos) {
     const card = document.createElement('div');
     card.className = 'video-card';
     card.dataset.path = v.path;
-    const sizeMB = (v.size / 1024 / 1024).toFixed(0);
-    const date = new Date(v.modified).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    const dur = v.duration ? fmtDur(v.duration) : '';
+    const sizeMB  = (v.size / 1024 / 1024).toFixed(0);
+    const sizeStr = v.size > 1024*1024*1024 ? `${(v.size/1024/1024/1024).toFixed(1)} GB` : `${sizeMB} MB`;
+    const date    = new Date(v.modified).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const dur     = v.duration ? fmtDur(v.duration) : '';
     const tagHtml = tags.map(t => `<span class="card-tag ${t === 'hidden' ? 'hidden' : ''}">${t}</span>`).join('');
+
+    const onDrive = driveIndex.has(v.name);
+    const driveBtn = onDrive
+      ? `<button class="card-act-btn drive-local-btn" title="Remove local copy (kept on Google Drive)">🗑 Local</button>`
+      : driveUploading.has(v.name)
+        ? `<button class="card-act-btn drive-upload-btn" disabled style="opacity:.6">☁ Uploading…</button>`
+        : `<button class="card-act-btn drive-upload-btn" title="Upload to Google Drive">☁ Drive</button>`;
+
+    // YouTube state line — shown only when uploaded
+    let ytLine = '';
+    if (v.ytVideoIds?.length) {
+      const ids  = v.ytVideoIds.map(id => `<a href="https://youtu.be/${id}" target="_blank" onclick="event.stopPropagation()">▶ youtu.be/${id}</a>`).join(' ');
+      const pls  = v.ytPlaylists || [];
+      let plPart = '';
+      if (pls.length === 1) plPart = ` <span class="yt-pl-tag">· 📋 ${pls[0].name}</span>`;
+      else if (pls.length > 1) plPart = ` <span class="yt-pl-tag" title="${pls.map(p=>p.name).join(', ')}">· 📋 ${pls.length} playlists</span>`;
+      ytLine = `<div class="video-yt-link">${ids}${plPart}</div>`;
+    }
+
     card.innerHTML = `
-      <img src="/thumb/${v.path}" loading="lazy" onerror="const i=this;setTimeout(()=>{const s=i.src;i.src='';i.src=s;},4000)" />
-      <div class="card-actions">
-        <button class="card-act-btn purple ai-btn" title="Generate AI title &amp; description">✨ AI</button>
-        <button class="card-act-btn edit-btn" title="Edit title &amp; description">✏️ Edit</button>
-        <button class="card-act-btn tag-edit-btn" title="Edit tags">🏷 Tags</button>
-        <button class="card-act-btn green add-proj-btn" title="Add to edit project">+ Project</button>
-        ${!tags.includes('hidden') ? `<button class="card-act-btn yt yt-btn" title="Upload to YouTube">▶ YouTube</button>` : ''}
-        <button class="card-act-btn red delete-btn" title="Delete">✕</button>
+      <div class="thumb-wrap">
+        <img src="/thumb/${v.path}" loading="lazy" onerror="const i=this;setTimeout(()=>{const s=i.src;i.src='';i.src=s;},4000)" />
+        <span class="thumb-pill tl">${date}</span>
+        ${dur ? `<span class="thumb-pill br">${dur}</span>` : ''}
+        <span class="thumb-pill tr">${sizeStr}</span>
       </div>
       <div class="video-info">
         <div class="video-name">${v.aiTitle || v.name}</div>
         ${v.aiTitle ? `<div class="video-filename">${v.name}</div>` : ''}
-        <div class="video-meta">
-          <span>${date}</span><span>${sizeMB} MB</span>${dur ? `<span>${dur}</span>` : ''}
-        </div>
         ${v.location ? `<div class="video-location">📍 ${v.location}</div>` : ''}
-        ${v.ytVideoIds?.length ? `<div class="video-yt-link">${v.ytVideoIds.map(id => `<a href="https://youtu.be/${id}" target="_blank" onclick="event.stopPropagation()">▶ youtu.be/${id}</a>`).join(' ')}</div>` : ''}
+        ${ytLine}
         ${tags.length ? `<div class="card-tags">${tagHtml}</div>` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="card-act-btn tag-edit-btn ${tags.length?'has-tags':''}" title="Edit tags">🏷 Tag</button>
+        <button class="card-act-btn add-proj-btn" title="Add to edit project">+ Project</button>
+        ${driveBtn}
+        <button class="card-act-btn card-archive-btn" title="Upload to Drive (if needed) then delete local copy">📦 Archive</button>
+        <button class="card-act-btn edit-btn" title="Edit details">✏️ Edit</button>
       </div>`;
-    card.querySelector('.delete-btn').addEventListener('click', e => {
-      e.stopPropagation();
-      if (!confirm(`Delete ${v.name}?`)) return;
-      fetch(`/api/video/${v.path}`, { method: 'DELETE' }).then(r => {
-        if (r.ok) { allVideos = allVideos.filter(x => x.path !== v.path); applyFilters(); }
-        else r.text().then(t => alert('Delete failed: ' + t));
-      });
-    });
-    card.querySelector('.ai-btn').addEventListener('click', e => { e.stopPropagation(); queueDescribe(v, card.querySelector('.ai-btn')); });
-    if (v.aiTitle) { card.querySelector('.ai-btn').textContent = '✨ Re-describe'; card.querySelector('.ai-btn').classList.add('done'); }
-    card.querySelector('.edit-btn').addEventListener('click', e => { e.stopPropagation(); openEditModal(v); });
+
+    card.querySelector('.thumb-wrap').addEventListener('click', () => openVideo(v));
     card.querySelector('.video-name').addEventListener('click', e => { e.stopPropagation(); openEditModal(v); });
+    card.querySelector('.edit-btn').addEventListener('click', e => { e.stopPropagation(); openEditModal(v); });
     card.querySelector('.tag-edit-btn').addEventListener('click', e => { e.stopPropagation(); openTagModal(v); });
-    card.querySelector('.yt-btn').addEventListener('click', e => { e.stopPropagation(); openYTModal(v, card.querySelector('.yt-btn')); });
-    card.addEventListener('click', () => openVideo(v));
+    card.querySelector('.add-proj-btn').addEventListener('click', e => { e.stopPropagation(); openAddProjModal(v.path); });
+
+    const uploadBtn = card.querySelector('.drive-upload-btn');
+    if (uploadBtn && !uploadBtn.disabled) uploadBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      driveUploading.add(v.name);
+      applyFilters();
+      const r = await fetch('/api/drive/upload', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ path: v.path }) });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({ error: r.statusText }));
+        driveUploading.delete(v.name);
+        applyFilters();
+        alert('Drive upload failed: ' + err.error);
+        return;
+      }
+      pollDriveUpload(v.name);
+    });
+
+    const localBtn = card.querySelector('.drive-local-btn');
+    if (localBtn) localBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm(`Remove local copy of "${v.name}"?\n\nIt will remain on Google Drive and can be re-downloaded later.`)) return;
+      const r = await fetch('/api/drive/local', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ path: v.path }) });
+      if (r.ok) { allVideos = allVideos.filter(x => x.path !== v.path); applyFilters(); }
+      else { const err = await r.json(); alert('Error: ' + err.error); }
+    });
+
+    const archBtn = card.querySelector('.card-archive-btn');
+    if (archBtn) archBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const isOnDrive = driveIndex.has(v.name);
+      const msg = isOnDrive
+        ? `Archive "${v.name}"?\n\nIt's already on Google Drive — this will delete the local copy to free disk space.`
+        : `Archive "${v.name}"?\n\nIt will be uploaded to Google Drive, then the local copy will be deleted to free disk space.`;
+      if (!confirm(msg)) return;
+      archBtn.disabled = true;
+
+      if (!isOnDrive) {
+        archBtn.textContent = '⏳ Uploading…';
+        await fetch('/api/drive/upload', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ path: v.path }) });
+        // Poll up to ~20 minutes for the file to appear on Drive
+        archBtn.textContent = '⏳ Verifying…';
+        let found = false;
+        for (let i = 0; i < 240; i++) {
+          await new Promise(r => setTimeout(r, 5000));
+          const idx = await fetch('/api/drive/index').then(r => r.json());
+          driveIndex = new Set(idx.map(f => f.filename));
+          if (driveIndex.has(v.name)) { found = true; break; }
+        }
+        if (!found) {
+          archBtn.textContent = '⚠️ Upload timed out';
+          archBtn.disabled = false;
+          setTimeout(() => { archBtn.textContent = '📦 Archive'; }, 3000);
+          return;
+        }
+      }
+
+      archBtn.textContent = '🗑 Removing…';
+      const r = await fetch('/api/drive/local', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ path: v.path }) });
+      if (r.ok) {
+        allVideos = allVideos.filter(x => x.path !== v.path);
+        applyFilters();
+      } else {
+        const err = await r.json();
+        alert('Archive failed: ' + err.error);
+        archBtn.disabled = false;
+        archBtn.textContent = '📦 Archive';
+      }
+    });
+
     libraryEl.appendChild(card);
   });
 }
@@ -897,12 +1158,22 @@ function renderSuggestions() {
   });
 }
 
-function saveTag(tags) {
-  allTags[tagModalVideo.path] = tags;
-  // Also update the video object directly so videoTags() picks it up immediately
-  const v = allVideos.find(v => v.path === tagModalVideo.path);
+async function saveTag(tags) {
+  const oldPath = tagModalVideo.path;
+  allTags[oldPath] = tags;
+  const v = allVideos.find(v => v.path === oldPath);
   if (v) v.tags = tags;
-  fetch(`/api/tags/${tagModalVideo.path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags }) });
+  const r = await fetch(`/api/tags/${oldPath}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags }) });
+  if (r.ok) {
+    const data = await r.json();
+    if (data.path && data.path !== oldPath) {
+      // File moved to/from .hidden — update path everywhere
+      if (v) v.path = data.path;
+      allTags[data.path] = allTags[oldPath];
+      delete allTags[oldPath];
+      tagModalVideo.path = data.path;
+    }
+  }
   renderModalTags();
   renderSuggestions();
   renderTagPlSection();
@@ -951,17 +1222,14 @@ function resetEnhancements() {
   document.getElementById('sharpness').value = 0;
 }
 
+let gpxOverlay = null;      // loaded GPX data for current clip
+let gpxOverlayOn = true;    // user toggle
+
 function openVideo(v) {
   libraryView.classList.add('hidden');
   playerView.classList.add('active');
-  nowPlayingTitle.textContent = v.aiTitle || v.name;
-  if (v.aiDesc) {
-    nowPlayingDesc.textContent = v.aiDesc;
-    nowPlayingDesc.classList.add('visible');
-  } else {
-    nowPlayingDesc.textContent = '';
-    nowPlayingDesc.classList.remove('visible');
-  }
+  currentPlayerVideo = v;
+  renderPlayerInfo(v);
   video.src = '/video/' + v.path;
   video.load();
   video.play();
@@ -970,7 +1238,79 @@ function openVideo(v) {
   currentVideoPath = v.path;
   resetEnhancements();
   loadTranscript(v.path);
+  gpxOverlay = null;
+  fetch('/api/player/gpx-overlay/' + v.path).then(r => r.json()).then(d => { gpxOverlay = d; }).catch(() => {});
   startRender();
+}
+
+function renderPlayerInfo(v) {
+  nowPlayingTitle.textContent = v.aiTitle || v.name;
+
+  // Metadata chips
+  const metaRow = document.getElementById('pi-meta-row');
+  const chips = [];
+  if (v.modified) chips.push(`<span class="pi-meta-chip">${new Date(v.modified).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</span>`);
+  if (v.duration)  chips.push(`<span class="pi-meta-chip">${fmtDur(v.duration)}</span>`);
+  if (v.size)      chips.push(`<span class="pi-meta-chip">${v.size > 1e9 ? (v.size/1e9).toFixed(1)+' GB' : Math.round(v.size/1e6)+' MB'}</span>`);
+  if (v.codec)     chips.push(`<span class="pi-meta-chip">${v.codec.toUpperCase()}</span>`);
+  if (v.location)  chips.push(`<span class="pi-meta-chip loc">📍 ${v.location}</span>`);
+  metaRow.innerHTML = chips.join('');
+
+  renderPlayerTags(v);
+  renderPlayerYTBtn(v);
+}
+
+function renderPlayerTags(v) {
+  const row = document.getElementById('pi-tags-row');
+  // Keep the input wrap element, rebuild the rest
+  const inputWrap = document.getElementById('pi-tag-input-wrap');
+  row.innerHTML = '';
+  videoTags(v).forEach(t => {
+    const el = document.createElement('span');
+    el.className = 'pi-tag';
+    el.textContent = t;
+    el.title = 'Click to remove';
+    el.onclick = () => {
+      const newTags = videoTags(v).filter(x => x !== t);
+      allTags[v.path] = newTags;
+      v.tags = newTags;
+      fetch(`/api/tags/${v.path}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ tags: newTags }) }).then(r => r.json()).then(d => { if (d.path && d.path !== v.path) { allTags[d.path] = allTags[v.path]; delete allTags[v.path]; v.path = d.path; } });
+      renderPlayerTags(v);
+      applyFilters();
+    };
+    row.appendChild(el);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.id = 'pi-tag-add';
+  addBtn.textContent = '+ tag';
+  addBtn.onclick = () => {
+    inputWrap.classList.add('visible');
+    document.getElementById('pi-tag-input').value = '';
+    document.getElementById('pi-tag-input').focus();
+  };
+  row.appendChild(addBtn);
+  row.appendChild(inputWrap);
+  inputWrap.classList.remove('visible');
+}
+
+function renderPlayerYTBtn(v) {
+  const btn = document.getElementById('player-yt-btn');
+  if (!btn) return;
+  btn.className = 'action-btn';
+  if (v.ytVideoIds?.length) {
+    const pls = v.ytPlaylists || [];
+    let label = `✓ YouTube`;
+    if (pls.length === 1) label = `✓ YouTube · 📋 ${pls[0].name}`;
+    else if (pls.length > 1) label = `✓ YouTube · 📋 ${pls.length} playlists`;
+    btn.textContent = label;
+    btn.classList.add('yt-done');
+    btn.title = 'On YouTube — click to manage';
+    btn.onclick = () => openEditModal(v);
+  } else {
+    btn.textContent = '▶ YouTube';
+    btn.title = 'Upload to YouTube';
+    btn.onclick = () => openYTModal(v, btn);
+  }
 }
 
 const transcriptModal = document.getElementById('transcript-modal');
@@ -1018,12 +1358,60 @@ document.getElementById('back-btn').addEventListener('click', () => {
   video.src = '';
   cancelAnimationFrame(rafId);
   playerView.classList.remove('active');
+  currentPlayerVideo = null;
   if (playerReturnTo === 'project') {
     projectsView.classList.add('active');
   } else {
     libraryView.classList.remove('hidden');
   }
   playerReturnTo = 'library';
+});
+
+// Inline tag add (player info strip)
+document.getElementById('pi-title').addEventListener('click', () => {
+  if (currentPlayerVideo) openEditModal(currentPlayerVideo);
+});
+document.getElementById('pi-edit-link').addEventListener('click', () => {
+  if (currentPlayerVideo) openEditModal(currentPlayerVideo);
+});
+function addPlayerTag() {
+  if (!currentPlayerVideo) return;
+  const input = document.getElementById('pi-tag-input');
+  const val = input.value.trim().toLowerCase();
+  if (!val) { document.getElementById('pi-tag-input-wrap').classList.remove('visible'); return; }
+  const cur = videoTags(currentPlayerVideo);
+  if (!cur.includes(val)) {
+    const newTags = [...cur, val];
+    allTags[currentPlayerVideo.path] = newTags;
+    currentPlayerVideo.tags = newTags;
+    fetch(`/api/tags/${currentPlayerVideo.path}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ tags: newTags }) }).then(r => r.json()).then(d => { if (d.path && d.path !== currentPlayerVideo.path) { allTags[d.path] = allTags[currentPlayerVideo.path]; delete allTags[currentPlayerVideo.path]; currentPlayerVideo.path = d.path; } });
+    renderPlayerTags(currentPlayerVideo);
+    applyFilters();
+  }
+  input.value = '';
+  document.getElementById('pi-tag-input-wrap').classList.remove('visible');
+}
+document.getElementById('pi-tag-confirm').addEventListener('click', addPlayerTag);
+document.getElementById('pi-tag-input').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayerTag(); if (e.key === 'Escape') { document.getElementById('pi-tag-input-wrap').classList.remove('visible'); } });
+
+// Player + Project button
+document.getElementById('player-proj-btn').addEventListener('click', () => {
+  if (currentPlayerVideo) openAddProjModal(currentPlayerVideo.path);
+});
+
+// Player delete button
+document.getElementById('player-delete-btn').addEventListener('click', async () => {
+  if (!currentPlayerVideo) return;
+  const v = currentPlayerVideo;
+  if (!confirm(`Delete ${v.name}?\n\nThis removes the local file. If it's on Google Drive, the Drive copy is kept.`)) return;
+  const r = await fetch(`/api/video/${v.path}`, { method: 'DELETE' });
+  if (r.ok) {
+    allVideos = allVideos.filter(x => x.path !== v.path);
+    applyFilters();
+    document.getElementById('back-btn').click();
+  } else {
+    alert('Delete failed: ' + await r.text());
+  }
 });
 
 // --- Render loop with enhancements ---
@@ -1071,6 +1459,209 @@ function paintFrame(vctx, cw, ch) {
     vctx.globalCompositeOperation = 'source-over';
     vctx.globalAlpha = 1;
   }
+
+  vctx.filter = 'none';
+  if (gpxOverlay && gpxOverlayOn) drawGpxHud(vctx, cw, ch);
+}
+
+function drawGpxHud(vctx, cw, ch) {
+  const o = gpxOverlay;
+  if (!o || !o.pts || !o.pts.length) return;
+
+  // Current UTC timestamp from video position
+  const nowUtc = o.clipStartUtc + video.currentTime * 1000;
+
+  // Binary search for nearest point
+  let lo = 0, hi = o.pts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (o.pts[mid].t < nowUtc) lo = mid + 1; else hi = mid;
+  }
+  const pt = o.pts[lo] || o.pts[0];
+  if (!pt) return;
+
+  // Show the toggle button now we know there's data
+  document.getElementById('gpx-overlay-btn').style.display = '';
+
+  // Pace: average over last ~10 points
+  let paceStr = '--:--';
+  if (lo >= 3) {
+    const prev = o.pts[Math.max(0, lo - 10)];
+    const distM = pt.dist - prev.dist;
+    const timeS = (pt.t - prev.t) / 1000;
+    if (distM > 5 && timeS > 0) {
+      const secPerKm = timeS / (distM / 1000);
+      const pm = Math.floor(secPerKm / 60), ps = Math.round(secPerKm % 60);
+      paceStr = `${pm}:${String(ps).padStart(2,'0')}/km`;
+    }
+  }
+
+  const distKm = (pt.dist / 1000).toFixed(2);
+  const hrVal  = pt.hr  ? `${pt.hr}` : '--';
+
+  // Grade: look back ~200m of distance to smooth GPS altitude noise
+  let gradeStr = '';
+  if (lo >= 2 && pt.ele != null) {
+    let gIdx = lo - 1;
+    while (gIdx > 0 && (pt.dist - o.pts[gIdx].dist) < 200) gIdx--;
+    const gPrev = o.pts[gIdx];
+    if (gPrev.ele != null) {
+      const horizDist = pt.dist - gPrev.dist;
+      if (horizDist > 50) {
+        const grade = ((pt.ele - gPrev.ele) / horizDist) * 100;
+        const arrow = grade > 1 ? '▲' : grade < -1 ? '▼' : '→';
+        gradeStr = `${arrow} ${Math.abs(grade).toFixed(1)}%`;
+      }
+    }
+  }
+
+  const tempStr = pt.atemp != null ? `${Math.round(pt.atemp)}°C` : null;
+
+  // HR zones — Karvonen (HRR) method: zone% of (maxHR - restingHR) + restingHR
+  const maxHr = o.maxHr || 184;
+  const restHr = o.restHr || 59;
+  const hrr = maxHr - restHr;
+  // Zone boundaries: [50,60,70,80,90,100]% HRR
+  const zoneBounds = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0].map(p => restHr + p * hrr);
+  const ZONES = [
+    { label: 'Z1', color: '#6af' },
+    { label: 'Z2', color: '#4d4' },
+    { label: 'Z3', color: '#ee4' },
+    { label: 'Z4', color: '#f84' },
+    { label: 'Z5', color: '#f44' },
+  ];
+  // hrFrac: 0 = zoneBounds[0] (bottom of Z1), 1 = maxHr (top of Z5)
+  const hrFrac = pt.hr ? Math.min(1, Math.max(0, (pt.hr - zoneBounds[0]) / (maxHr - zoneBounds[0]))) : 0;
+  let zoneIdx = 0;
+  if (pt.hr) { zoneIdx = 4; for (let i = 0; i < 5; i++) { if (pt.hr < zoneBounds[i + 1]) { zoneIdx = i; break; } } }
+  const currentZone = ZONES[zoneIdx];
+
+  // HUD box — bottom-left
+  const pad = 14, mapSz = 90, zbW = 16, boxW = mapSz + zbW + 98;
+  const boxH = mapSz + (tempStr ? 88 : 70);
+  const bx = pad, by = ch - pad - boxH;
+
+  vctx.save();
+  // Background
+  vctx.globalAlpha = 0.78;
+  vctx.fillStyle = '#000';
+  roundRect(vctx, bx, by, boxW, boxH, 10);
+  vctx.fill();
+  vctx.globalAlpha = 1;
+
+  // Mini route map
+  const mx = bx + 8, my = by + 8, mw = mapSz, mh = mapSz;
+  const b = o.routeBounds;
+  const scaleX = mw / ((b.maxLon - b.minLon) || 0.001);
+  const scaleY = mh / ((b.maxLat - b.minLat) || 0.001);
+  const mapScale = Math.min(scaleX, scaleY) * 0.88;
+  const mox = mx + (mw - (b.maxLon - b.minLon) * mapScale) / 2;
+  const moy = my + mh - (mh - (b.maxLat - b.minLat) * mapScale) / 2;
+  const mpx = p => mox + (p[1] - b.minLon) * mapScale;
+  const mpy = p => moy - (p[0] - b.minLat) * mapScale;
+
+  // Full route
+  vctx.beginPath();
+  o.routeLine.forEach((p, i) => { i === 0 ? vctx.moveTo(mpx(p), mpy(p)) : vctx.lineTo(mpx(p), mpy(p)); });
+  vctx.strokeStyle = '#3a6a3a'; vctx.lineWidth = 1.2; vctx.stroke();
+
+  // Travelled so far (up to current point index in routeLine)
+  const routeFrac = pt.dist / (o.totalDist || 1);
+  const routeUpTo = Math.floor(routeFrac * o.routeLine.length);
+  vctx.beginPath();
+  o.routeLine.slice(0, routeUpTo + 1).forEach((p, i) => { i === 0 ? vctx.moveTo(mpx(p), mpy(p)) : vctx.lineTo(mpx(p), mpy(p)); });
+  vctx.strokeStyle = '#4fc'; vctx.lineWidth = 1.8; vctx.stroke();
+
+  // Current position dot
+  const dotX = mox + (pt.lon - b.minLon) * mapScale;
+  const dotY = moy - (pt.lat - b.minLat) * mapScale;
+  vctx.beginPath(); vctx.arc(dotX, dotY, 4, 0, Math.PI*2);
+  vctx.fillStyle = '#fff'; vctx.fill();
+  vctx.beginPath(); vctx.arc(dotX, dotY, 2.5, 0, Math.PI*2);
+  vctx.fillStyle = '#f44'; vctx.fill();
+
+  // Zone bar — between map and text
+  const zbX = bx + mapSz + 6, zbY = by + 8, zbH = mapSz;
+  // Draw dim zone segments (background)
+  ZONES.forEach((z, i) => {
+    const segH = zbH / 5;
+    const segY = zbY + zbH - (i + 1) * segH; // bottom = Z1, top = Z5
+    vctx.globalAlpha = 0.18;
+    vctx.fillStyle = z.color;
+    vctx.fillRect(zbX, segY, zbW, segH);
+  });
+  // Filled portion up to current HR — draw per-zone slices
+  if (pt.hr) {
+    ZONES.forEach((z, i) => {
+      const segH = zbH / 5;
+      const zBottom = zbY + zbH - (i + 1) * segH;
+      const zFracBottom = i / 5, zFracTop = (i + 1) / 5;
+      if (hrFrac <= zFracBottom) return; // below this zone
+      const fillTop = Math.min(hrFrac, zFracTop);
+      const fillH = (fillTop - zFracBottom) * zbH;
+      const fillY = zbY + zbH - fillTop * zbH;
+      vctx.globalAlpha = 0.85;
+      vctx.fillStyle = z.color;
+      vctx.fillRect(zbX, fillY, zbW, fillH);
+    });
+    // Bright tick at current level
+    const tickY = zbY + zbH - hrFrac * zbH;
+    vctx.globalAlpha = 1;
+    vctx.fillStyle = '#fff';
+    vctx.fillRect(zbX - 2, tickY - 1, zbW + 4, 2);
+  }
+  vctx.globalAlpha = 1;
+
+  // Stats text — to the right of zone bar
+  const tx = zbX + zbW + 8, ty = by + 10;
+  // HR number + zone label
+  vctx.font = 'bold 26px system-ui';
+  vctx.fillStyle = currentZone.color;
+  vctx.fillText(hrVal, tx, ty + 22);
+  vctx.font = 'bold 11px system-ui'; vctx.fillStyle = currentZone.color;
+  vctx.fillText(currentZone.label, tx, ty + 36);
+  vctx.font = '10px system-ui'; vctx.fillStyle = '#666';
+  vctx.fillText('bpm', tx + 36, ty + 36);
+
+  vctx.font = 'bold 12px system-ui'; vctx.fillStyle = '#ddd';
+  vctx.fillText(paceStr, tx, ty + 54);
+
+  if (gradeStr) {
+    const isUp = gradeStr.startsWith('▲'), isDown = gradeStr.startsWith('▼');
+    vctx.font = 'bold 11px system-ui';
+    vctx.fillStyle = isUp ? '#fa6' : isDown ? '#6cf' : '#888';
+    vctx.fillText(gradeStr, tx, ty + 70);
+  }
+
+  if (tempStr) {
+    vctx.font = '11px system-ui'; vctx.fillStyle = '#fc8';
+    vctx.fillText(`${tempStr}`, tx, ty + 85);
+  }
+
+  // Distance bar along bottom
+  const dby = by + mapSz + 10;
+  const elapsedS = o.runStartUtc && pt.t ? Math.max(0, (pt.t - o.runStartUtc) / 1000) : null;
+  const elapsedStr = elapsedS != null ? (() => { const h = Math.floor(elapsedS / 3600), m = Math.floor((elapsedS % 3600) / 60), s = Math.floor(elapsedS % 60); return h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`; })() : null;
+  vctx.font = 'bold 12px system-ui'; vctx.fillStyle = '#4fc';
+  vctx.fillText(`${distKm} km`, bx + 8, dby + 14);
+  if (elapsedStr) { vctx.font = '11px system-ui'; vctx.fillStyle = '#aaa'; vctx.fillText(elapsedStr, bx + 8 + vctx.measureText(`${distKm} km`).width + 8, dby + 14); }
+  const barW = boxW - 16, barH = 4;
+  vctx.fillStyle = '#1a3a1a';
+  roundRect(vctx, bx + 8, dby + 18, barW, barH, 2); vctx.fill();
+  vctx.fillStyle = '#4fc';
+  roundRect(vctx, bx + 8, dby + 18, barW * routeFrac, barH, 2); vctx.fill();
+
+  vctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
 }
 
 const fallbackVideo = document.getElementById('fallback-video');
@@ -1124,10 +1715,105 @@ function startRender() {
   draw();
 }
 
-// --- Playback controls ---
-canvas.addEventListener('click', (e) => {
-  if (!isPanning) video.paused ? video.play() : video.pause();
+// --- Video overlay (skip / fullscreen) ---
+const videoOverlay = document.getElementById('video-overlay');
+const videoWrap    = document.getElementById('video-wrap');
+let overlayHideTimer = null;
+
+function showOverlay() {
+  videoOverlay.classList.add('visible');
+  clearTimeout(overlayHideTimer);
+  overlayHideTimer = setTimeout(() => videoOverlay.classList.remove('visible'), 3000);
+}
+
+function toggleVideoFullscreen() {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+
+  // Already in iOS native video fullscreen?
+  if (fallbackVideo.webkitDisplayingFullscreen) {
+    fallbackVideo.webkitExitFullscreen();
+    return;
+  }
+
+  if (isFs) {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) exit.call(document);
+    if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+    return;
+  }
+
+  // Try standard fullscreen on the video wrapper (Chrome/Firefox/Safari desktop, Android)
+  const req = videoWrap.requestFullscreen || videoWrap.webkitRequestFullscreen;
+  if (req) {
+    const p = req.call(videoWrap);
+    if (p && p.then) {
+      p.then(() => {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      }).catch(() => iosFullscreenFallback());
+    } else {
+      // Older Safari returns undefined
+      setTimeout(() => {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      }, 50);
+    }
+  } else {
+    iosFullscreenFallback();
+  }
+}
+
+// iOS Safari: only HTMLVideoElement can go fullscreen via webkitEnterFullscreen.
+// Mirror src-video into the fallback video element and fullscreen that.
+function iosFullscreenFallback() {
+  if (!fallbackVideo.webkitEnterFullscreen) return;
+  if (fallbackVideo.src !== video.src) {
+    fallbackVideo.src = video.src;
+  }
+  fallbackVideo.currentTime = video.currentTime;
+  const enter = () => { try { fallbackVideo.webkitEnterFullscreen(); } catch {} };
+  if (fallbackVideo.readyState >= 1) enter();
+  else fallbackVideo.addEventListener('loadedmetadata', enter, { once: true });
+  fallbackVideo.play().catch(() => {});
+  // Sync time back to canvas when user exits iOS fullscreen
+  fallbackVideo.addEventListener('webkitendfullscreen', () => {
+    video.currentTime = fallbackVideo.currentTime;
+    if (!fallbackVideo.paused) video.play().catch(() => {});
+  }, { once: true });
+}
+
+document.getElementById('ov-back').addEventListener('click', e => {
+  e.stopPropagation();
+  if (multiTouchActive || isPanning) return;
+  video.currentTime = Math.max(0, video.currentTime - 10);
+  showOverlay();
 });
+document.getElementById('ov-fwd').addEventListener('click', e => {
+  e.stopPropagation();
+  if (multiTouchActive || isPanning) return;
+  video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
+  showOverlay();
+});
+document.getElementById('ov-fs').addEventListener('click', e => {
+  e.stopPropagation();
+  toggleVideoFullscreen();
+  showOverlay();
+});
+
+// --- Playback controls ---
+// Tap/click on the video: first shows overlay, second toggles play/pause
+function handleVideoTap() {
+  if (isPanning) return;
+  if (videoOverlay.classList.contains('visible')) {
+    video.paused ? video.play() : video.pause();
+    showOverlay(); // reset timer so it stays a bit longer after toggle
+  } else {
+    showOverlay();
+  }
+}
+canvas.addEventListener('click', handleVideoTap);
 fallbackVideo.addEventListener('click', () => {
   fallbackVideo.paused ? fallbackVideo.play() : fallbackVideo.pause();
 });
@@ -1204,13 +1890,22 @@ document.getElementById('zoom').addEventListener('input', e => {
 });
 
 // --- Zoom (pinch on mobile) ---
+// Bound to #video-wrap (the parent), not canvas, so pinch still works when the
+// overlay is visible — overlay buttons sit on top of the canvas and otherwise
+// swallow the touches.
 let lastPinchDist = null;
-canvas.addEventListener('touchstart', e => {
-  if (e.touches.length === 2) lastPinchDist = pinchDist(e);
-  else if (e.touches.length === 1) { isPanning = false; panStart = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY }; }
+let multiTouchActive = false;
+videoWrap.addEventListener('touchstart', e => {
+  if (e.touches.length >= 2) {
+    multiTouchActive = true;
+    lastPinchDist = pinchDist(e);
+  } else if (e.touches.length === 1) {
+    isPanning = false;
+    panStart = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY };
+  }
 }, { passive: true });
-canvas.addEventListener('touchmove', e => {
-  if (e.touches.length === 2) {
+videoWrap.addEventListener('touchmove', e => {
+  if (e.touches.length >= 2) {
     const d = pinchDist(e);
     if (lastPinchDist) currentZoom = Math.max(1, Math.min(4, currentZoom * d / lastPinchDist));
     lastPinchDist = d;
@@ -1223,7 +1918,12 @@ canvas.addEventListener('touchmove', e => {
     panY = e.touches[0].clientY - panStart.y;
   }
 }, { passive: true });
-canvas.addEventListener('touchend', () => { lastPinchDist = null; setTimeout(() => isPanning = false, 100); });
+videoWrap.addEventListener('touchend', e => {
+  if (e.touches.length === 0) {
+    lastPinchDist = null;
+    setTimeout(() => { isPanning = false; multiTouchActive = false; }, 150);
+  }
+});
 
 function pinchDist(e) {
   const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -1246,20 +1946,11 @@ canvas.addEventListener('wheel', e => {
 
 // Fullscreen
 const fullscreenBtn = document.getElementById('fullscreen-btn');
-fullscreenBtn.addEventListener('click', () => {
-  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-  if (!isFs) {
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (req) req.call(el).catch(() => {});
-  } else {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen;
-    if (exit) exit.call(document);
-  }
-});
+fullscreenBtn.addEventListener('click', toggleVideoFullscreen);
 function onFsChange() {
   const isFs = document.fullscreenElement || document.webkitFullscreenElement;
   fullscreenBtn.textContent = isFs ? '✕' : '⛶';
+  document.getElementById('ov-fs').textContent = isFs ? '✕' : '⛶';
 }
 document.addEventListener('fullscreenchange', onFsChange);
 document.addEventListener('webkitfullscreenchange', onFsChange);
@@ -1286,6 +1977,52 @@ let editCurrentVideo  = null;
 
 document.getElementById('edit-cancel-btn').addEventListener('click', () => editModal.classList.remove('open'));
 editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.remove('open'); });
+
+document.getElementById('edit-delete-btn').addEventListener('click', async () => {
+  if (!editCurrentVideo) return;
+  const v = editCurrentVideo;
+  if (!confirm(`Delete ${v.name}?\n\nThis removes the local file. If it's on Google Drive, the Drive copy is kept.`)) return;
+  const r = await fetch(`/api/video/${v.path}`, { method: 'DELETE' });
+  if (r.ok) {
+    allVideos = allVideos.filter(x => x.path !== v.path);
+    applyFilters();
+    editModal.classList.remove('open');
+  } else {
+    const t = await r.text();
+    alert('Delete failed: ' + t);
+  }
+});
+
+document.getElementById('edit-ai-btn').addEventListener('click', async () => {
+  if (!editCurrentVideo) return;
+  const btn = document.getElementById('edit-ai-btn');
+  btn.disabled = true; btn.textContent = '✨ Generating…';
+  try {
+    await fetch(`/api/describe/${editCurrentVideo.path}`, { method: 'POST' });
+    // Poll until complete
+    const poll = setInterval(async () => {
+      const d = await fetch(`/api/describe/${editCurrentVideo.path}`).then(r => r.json());
+      if (d.status === 'done') {
+        clearInterval(poll);
+        editTitleEl.value = d.title || editTitleEl.value;
+        editDescEl.value  = d.description || editDescEl.value;
+        // Update underlying state so the card reflects it on next render
+        editCurrentVideo.aiTitle = d.title;
+        editCurrentVideo.aiDesc  = d.description;
+        const idx = allVideos.findIndex(x => x.path === editCurrentVideo.path);
+        if (idx >= 0) { allVideos[idx].aiTitle = d.title; allVideos[idx].aiDesc = d.description; }
+        btn.disabled = false; btn.textContent = '✨ Regenerate';
+      } else if (d.status === 'error') {
+        clearInterval(poll);
+        btn.disabled = false; btn.textContent = '✨ Regenerate';
+        alert('AI failed: ' + (d.error || 'unknown'));
+      }
+    }, 1500);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '✨ Regenerate';
+    alert('Failed: ' + e.message);
+  }
+});
 
 function openEditModal(v) {
   editCurrentVideo = v;
@@ -1331,8 +2068,7 @@ document.getElementById('edit-save-local-btn').addEventListener('click', async (
   // Update player if open
   if (currentVideoPath === editCurrentVideo.path) {
     nowPlayingTitle.textContent = title;
-    nowPlayingDesc.textContent  = desc;
-    if (desc) nowPlayingDesc.classList.add('visible');
+    if (currentPlayerVideo) renderPlayerInfo(currentPlayerVideo);
   }
   editModal.classList.remove('open');
 });
@@ -1388,8 +2124,7 @@ function pollDescribe(v, btn) {
       // Update player if this video is currently open
       if (currentVideoPath === v.path) {
         nowPlayingTitle.textContent = d.title;
-        nowPlayingDesc.textContent = d.description;
-        nowPlayingDesc.classList.add('visible');
+        if (currentPlayerVideo) renderPlayerInfo(currentPlayerVideo);
       }
     } else if (d.status === 'error') {
       btn.textContent = '✨ Retry';
@@ -1506,11 +2241,16 @@ ytUploadBtn.addEventListener('click', async () => {
       clearInterval(poll);
       ytStatusMsg.innerHTML = `Done! <a href="${s.url}" target="_blank" style="color:#f88">${s.url}</a>`;
       ytUploadBtn.textContent = 'Uploaded ✓';
-      if (ytCurrentBtn) { ytCurrentBtn.textContent = '▶ Uploaded ✓'; ytCurrentBtn.className = 'card-act-btn yt yt-btn done'; }
+      if (ytCurrentBtn && ytCurrentBtn !== document.getElementById('player-yt-btn')) {
+        ytCurrentBtn.textContent = '▶ Uploaded ✓'; ytCurrentBtn.className = 'card-act-btn yt yt-btn done';
+      }
       const videoId = s.url.split('/').pop();
       if (ytCurrentVideo) {
         if (!ytCurrentVideo.ytVideoIds) ytCurrentVideo.ytVideoIds = [];
         if (!ytCurrentVideo.ytVideoIds.includes(videoId)) ytCurrentVideo.ytVideoIds.push(videoId);
+      }
+      if (currentPlayerVideo && ytCurrentVideo && currentPlayerVideo.path === ytCurrentVideo.path) {
+        renderPlayerYTBtn(currentPlayerVideo);
       }
       applyFilters();
       // Show playlist picker now we have a video ID
@@ -1549,33 +2289,20 @@ document.getElementById('auto-enhance-btn').addEventListener('click', () => {
 
 document.getElementById('reset-enhance-btn').addEventListener('click', resetEnhancements);
 
-// --- Describe All ---
-const describeAllBtn      = document.getElementById('describe-all-btn');
+document.getElementById('gpx-overlay-btn').addEventListener('click', function() {
+  gpxOverlayOn = !gpxOverlayOn;
+  this.textContent = `📍 Stats: ${gpxOverlayOn ? 'On' : 'Off'}`;
+});
+
+// --- Describe All (button removed — individual ✏️ Edit used instead) ---
 const describeProgressBar = document.getElementById('describe-progress-bar');
 const describeProgressFill= document.getElementById('describe-progress-fill');
 let describeAllPoll = null;
-
-describeAllBtn.addEventListener('click', async () => {
-  describeAllBtn.disabled = true;
-  describeAllBtn.textContent = '⏳ Queueing…';
-  const r = await fetch('/api/describe-all', { method: 'POST' });
-  const { queued, total } = await r.json();
-  if (queued === 0) {
-    describeAllBtn.textContent = '✨ All done';
-    describeAllBtn.disabled = false;
-    return;
-  }
-  describeProgressBar.style.display = 'block';
-  describeAllBtn.textContent = `⏳ 0 / ${total}`;
-  startDescribeAllPoll(total);
-});
-
 let describeLastCardRefresh = 0;
 
 function startDescribeAllPoll(total) {
   if (describeAllPoll) clearInterval(describeAllPoll);
   describeProgressBar.style.display = 'block';
-  describeAllBtn.disabled = true;
 
   describeAllPoll = setInterval(async () => {
     let prog;
@@ -1585,9 +2312,7 @@ function startDescribeAllPoll(total) {
     const effectiveTotal = total || (done + pending + processing);
     const pct = effectiveTotal ? Math.round((done / effectiveTotal) * 100) : 0;
     describeProgressFill.style.width = pct + '%';
-    describeAllBtn.textContent = `⏳ ${done} / ${effectiveTotal}`;
 
-    // Refresh card titles at most every 30 seconds
     const now = Date.now();
     if (now - describeLastCardRefresh > 30000) {
       describeLastCardRefresh = now;
@@ -1597,9 +2322,7 @@ function startDescribeAllPoll(total) {
         for (const fv of fresh) {
           const existing = allVideos.find(v => v.path === fv.path);
           if (existing && fv.aiTitle && existing.aiTitle !== fv.aiTitle) {
-            existing.aiTitle = fv.aiTitle;
-            existing.aiDesc  = fv.aiDesc;
-            updated = true;
+            existing.aiTitle = fv.aiTitle; existing.aiDesc = fv.aiDesc; updated = true;
           }
         }
         if (updated) applyFilters();
@@ -1609,9 +2332,6 @@ function startDescribeAllPoll(total) {
     if (pending === 0 && processing === 0) {
       clearInterval(describeAllPoll);
       describeAllPoll = null;
-      describeAllBtn.textContent = `✨ Done (${done})`;
-      describeAllBtn.disabled = false;
-      // Final card refresh
       try {
         const fresh = await fetch('/api/videos').then(r => r.json());
         for (const fv of fresh) {
@@ -1670,12 +2390,11 @@ function pollSyncProgress(initialQueued) {
     const total = pending + processing + done + error;
     const pct = total ? Math.round((done / total) * 100) : 0;
     fillEl.style.width = pct + '%';
-    statusEl.textContent = `⬆ Syncing to YouTube: ${done} / ${total}${error ? ` (${error} failed)` : ''}`;
+    statusEl.textContent = `⬆ Uploading to YouTube: ${done} of ${total}${processing ? ` (uploading now…)` : ''}${error ? ` — ${error} failed` : ''}`;
 
     if (pending === 0 && processing === 0) {
       clearInterval(syncPoll);
       syncPoll = null;
-      statusEl.textContent = `✓ Sync complete: ${done} uploaded${error ? `, ${error} failed` : ''}`;
       // Refresh library so YouTube links show up on cards
       try {
         const fresh = await fetch('/api/videos').then(r => r.json());
@@ -1685,10 +2404,177 @@ function pollSyncProgress(initialQueued) {
         }
         applyFilters();
       } catch {}
-      setTimeout(() => { statusEl.style.display = 'none'; barEl.style.display = 'none'; fillEl.style.width = '0%'; }, 5000);
+      if (error > 0) {
+        statusEl.innerHTML = `⚠️ ${done} uploaded, ${error} failed. <button onclick="retrySyncFailed()" style="background:rgba(200,0,0,.5);border:1px solid #c00;color:#fff;padding:2px 10px;border-radius:4px;font-size:11px;cursor:pointer">↺ Retry failed</button>`;
+      } else {
+        statusEl.textContent = `✓ Sync complete: ${done} uploaded`;
+        setTimeout(() => { statusEl.style.display = 'none'; barEl.style.display = 'none'; fillEl.style.width = '0%'; }, 5000);
+      }
     }
   }, 3000);
 }
+
+async function retrySyncFailed() {
+  const statusEl = document.getElementById('sync-status-msg');
+  const barEl    = document.getElementById('sync-progress-bar');
+  const r = await fetch('/api/sync-retry', { method: 'POST' });
+  const { retried } = await r.json();
+  if (retried === 0) { statusEl.textContent = 'No failed items to retry.'; return; }
+  statusEl.textContent = `↺ Retrying ${retried} failed upload${retried !== 1 ? 's' : ''}…`;
+  barEl.style.display = 'block';
+  pollSyncProgress(retried);
+}
+
+// ============================================================
+// ARCHIVE OLD FOOTAGE
+// ============================================================
+const archiveModal = document.getElementById('archive-modal');
+const archiveDays  = document.getElementById('archive-days');
+const archiveList  = document.getElementById('archive-list');
+const archiveCount = document.getElementById('archive-count');
+const archiveSize  = document.getElementById('archive-size');
+const archiveConfirm = document.getElementById('archive-confirm');
+let archiveCandidates = [];
+
+function fmtSize(bytes) {
+  if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
+  if (bytes >= 1e6) return Math.round(bytes / 1e6) + ' MB';
+  return Math.round(bytes / 1e3) + ' KB';
+}
+
+async function loadArchiveCandidates() {
+  archiveList.innerHTML = '<div id="archive-empty">Loading…</div>';
+  archiveConfirm.disabled = true;
+  const days = parseInt(archiveDays.value || '60', 10);
+  const data = await fetch(`/api/archive/candidates?days=${days}`).then(r => r.json());
+  archiveCandidates = data.candidates;
+  if (!archiveCandidates.length) {
+    archiveList.innerHTML = `<div id="archive-empty">Nothing to archive — no footage older than ${days} days is safely on Drive.</div>`;
+    archiveCount.textContent = '0 candidates';
+    archiveSize.textContent = '0 MB';
+    return;
+  }
+  archiveList.innerHTML = archiveCandidates.map((c, i) => `
+    <label class="arc-item">
+      <input type="checkbox" data-idx="${i}" checked />
+      <span class="arc-item-date">${c.date.slice(0, 10)}</span>
+      <span class="arc-item-name">${esc(c.name)}</span>
+      <span class="arc-item-size">${fmtSize(c.size)}</span>
+    </label>
+  `).join('');
+  archiveList.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', updateArchiveSummary));
+  updateArchiveSummary();
+}
+
+function updateArchiveSummary() {
+  const checked = archiveList.querySelectorAll('input[type=checkbox]:checked');
+  const idxs = Array.from(checked).map(cb => parseInt(cb.dataset.idx, 10));
+  const totalBytes = idxs.reduce((s, i) => s + archiveCandidates[i].size, 0);
+  archiveCount.textContent = `${idxs.length} of ${archiveCandidates.length} selected`;
+  archiveSize.textContent = fmtSize(totalBytes);
+  archiveConfirm.disabled = idxs.length === 0;
+}
+
+document.getElementById('archive-btn').addEventListener('click', () => {
+  archiveModal.classList.add('open');
+  loadArchiveCandidates();
+});
+document.getElementById('archive-close').addEventListener('click', () => archiveModal.classList.remove('open'));
+document.getElementById('archive-cancel').addEventListener('click', () => archiveModal.classList.remove('open'));
+archiveModal.addEventListener('click', e => { if (e.target === archiveModal) archiveModal.classList.remove('open'); });
+archiveDays.addEventListener('change', loadArchiveCandidates);
+document.getElementById('archive-select-all').addEventListener('click', () => {
+  const cbs = archiveList.querySelectorAll('input[type=checkbox]');
+  const allChecked = Array.from(cbs).every(cb => cb.checked);
+  cbs.forEach(cb => cb.checked = !allChecked);
+  updateArchiveSummary();
+});
+
+archiveConfirm.addEventListener('click', async () => {
+  const idxs = Array.from(archiveList.querySelectorAll('input[type=checkbox]:checked')).map(cb => parseInt(cb.dataset.idx, 10));
+  const paths = idxs.map(i => archiveCandidates[i].path);
+  const totalBytes = idxs.reduce((s, i) => s + archiveCandidates[i].size, 0);
+  if (!confirm(`Delete ${paths.length} local file${paths.length !== 1 ? 's' : ''} (${fmtSize(totalBytes)})?\n\nThey'll remain on Google Drive and can be re-downloaded later.`)) return;
+  archiveConfirm.disabled = true;
+  archiveConfirm.textContent = '⏳ Deleting…';
+  const r = await fetch('/api/archive/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paths }),
+  }).then(r => r.json());
+  archiveConfirm.textContent = 'Delete selected';
+  archiveModal.classList.remove('open');
+  alert(`✓ Deleted ${r.deleted} file${r.deleted !== 1 ? 's' : ''} — freed ${fmtSize(r.freedBytes)}${r.failed ? ` (${r.failed} failed)` : ''}`);
+  // Refresh library so deleted files disappear
+  loadLibrary();
+});
+
+// ============================================================
+// SD CARD IMPORT
+// ============================================================
+let sdPollTimer = null;
+
+async function pollSdCard() {
+  let data;
+  try { data = await fetch('/api/sdcard').then(r => r.json()); } catch { return; }
+  const banner = document.getElementById('sdcard-banner');
+
+  if (!data.detected) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  banner.style.display = 'flex';
+
+  if (data.importing) {
+    const pct = data.total ? Math.round((data.done / data.total) * 100) : 0;
+    banner.innerHTML = `<span>📥 Importing from SD card: ${data.done} / ${data.total}${data.current ? ` — ${data.current}` : ''}</span>
+      <span style="flex:1;height:4px;background:#0a2a0a;border-radius:2px;min-width:80px">
+        <span style="display:block;height:100%;width:${pct}%;background:#4f4;border-radius:2px;transition:width .4s"></span>
+      </span>`;
+    return;
+  }
+
+  if (data.newFiles > 0) {
+    banner.innerHTML = `<span>💾 SD card detected — <strong>${data.newFiles}</strong> new file${data.newFiles !== 1 ? 's' : ''}</span>
+      <button onclick="startSdImport()" style="background:rgba(0,180,0,.2);border:1px solid #2a6a2a;color:#8f8;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer">⬇ Import to laptop</button>`;
+  } else if (data.copied > 0) {
+    const errNote = data.errors.length ? ` (${data.errors.length} failed)` : '';
+    banner.innerHTML = `<span>✅ ${data.copied} file${data.copied !== 1 ? 's' : ''} imported${errNote}</span>
+      <button onclick="deleteSdFiles(this)" style="background:rgba(180,0,0,.2);border:1px solid #6a2a2a;color:#f88;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer">🗑 Delete from SD card</button>`;
+  } else {
+    banner.innerHTML = `<span>💾 SD card detected — all files already on laptop</span>`;
+  }
+}
+
+async function startSdImport() {
+  const banner = document.getElementById('sdcard-banner');
+  banner.innerHTML = `<span>📥 Starting import…</span>`;
+  await fetch('/api/sdcard/import', { method: 'POST' });
+  // poll more frequently while importing
+  clearInterval(sdPollTimer);
+  sdPollTimer = setInterval(pollSdCard, 1500);
+  pollSdCard();
+  // slow back down when done
+  setTimeout(() => {
+    clearInterval(sdPollTimer);
+    sdPollTimer = setInterval(pollSdCard, 5000);
+  }, 120000);
+}
+
+async function deleteSdFiles(btn) {
+  if (!confirm(`Delete all imported files from the SD card? This cannot be undone.`)) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Deleting…';
+  const r = await fetch('/api/sdcard/delete', { method: 'POST' }).then(r => r.json());
+  document.getElementById('sdcard-banner').innerHTML =
+    `<span>🗑 Deleted ${r.deleted} file${r.deleted !== 1 ? 's' : ''} from SD card${r.failed ? ` (${r.failed} failed)` : ''}</span>`;
+  setTimeout(pollSdCard, 3000);
+}
+
+// Start polling for SD card on page load
+sdPollTimer = setInterval(pollSdCard, 5000);
+pollSdCard();
 
 // ============================================================
 // YOUTUBE PLAYLISTS
@@ -1881,6 +2767,7 @@ function showProjectEditor(project) {
   editorName.value = project.name;
   editorStory.value = project.storyline || '';
   projectList.style.display = 'none';
+  loadGpxPanel(project);
   projectEditor.classList.add('active');
   renderEditorClips(project.clips || []);
 }
@@ -2103,6 +2990,50 @@ document.getElementById('proj-new-btn').addEventListener('click', async () => {
   showProjectEditor(p);
 });
 
+// Create project folder with symlinks and open in file manager
+document.getElementById('editor-kdenlive-load-btn').addEventListener('click', async () => {
+  if (!currentProjectId) return;
+  const btn = document.getElementById('editor-kdenlive-load-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating…';
+  try {
+    const r = await fetch(`/api/projects/${currentProjectId}/open-folder`, { method: 'POST' });
+    if (r.ok) {
+      const { clips, path } = await r.json();
+      btn.textContent = `✓ Opened (${clips} clips)`;
+      setTimeout(() => { btn.textContent = '📁 Open folder'; btn.disabled = false; }, 4000);
+    } else {
+      btn.textContent = '⚠️ ' + await r.text();
+      setTimeout(() => { btn.textContent = '📁 Open folder'; btn.disabled = false; }, 3000);
+    }
+  } catch {
+    btn.textContent = '⚠️ Failed';
+    setTimeout(() => { btn.textContent = '📁 Open folder'; btn.disabled = false; }, 3000);
+  }
+});
+
+// Open in Kdenlive
+document.getElementById('editor-kdenlive-btn').addEventListener('click', async () => {
+  if (!currentProjectId) return;
+  const btn = document.getElementById('editor-kdenlive-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Launching…';
+  try {
+    const r = await fetch(`/api/projects/${currentProjectId}/open-in-kdenlive`, { method: 'POST' });
+    if (r.ok) {
+      const { clips } = await r.json();
+      btn.textContent = `✓ Kdenlive opened (${clips} clips)`;
+      setTimeout(() => { btn.textContent = '🎬 Open in Kdenlive'; btn.disabled = false; }, 4000);
+    } else {
+      btn.textContent = '⚠️ ' + await r.text();
+      setTimeout(() => { btn.textContent = '🎬 Open in Kdenlive'; btn.disabled = false; }, 3000);
+    }
+  } catch (e) {
+    btn.textContent = '⚠️ Failed';
+    setTimeout(() => { btn.textContent = '🎬 Open in Kdenlive'; btn.disabled = false; }, 3000);
+  }
+});
+
 // Save project name/storyline
 document.getElementById('editor-save-btn').addEventListener('click', async () => {
   if (!currentProjectId) return;
@@ -2181,6 +3112,148 @@ document.getElementById('library').addEventListener('click', e => {
   if (card) openAddProjModal(card.dataset.path);
 });
 
+// --- GPX panel ---
+const gpxPanel = document.getElementById('gpx-panel');
+const gpxMap   = document.getElementById('gpx-map');
+const gpxStats = document.getElementById('gpx-stats');
+const gpxClipStats = document.getElementById('gpx-clip-stats');
+let gpxData = null;
+const SEG_COLORS = ['#4fc','#fc4','#f84','#c4f','#4cf','#cf4','#f4c','#8f8','#ff8','#f88'];
+
+async function loadGpxPanel(project) {
+  gpxPanel.style.display = 'none';
+  gpxData = null;
+  if (!project.gpx_path) return;
+  try {
+    const data = await fetch(`/api/projects/${project.id}/gpx`).then(r => r.json());
+    if (!data || !data.points?.length) return;
+    gpxData = data;
+    gpxPanel.style.display = 'block';
+    const totalMin = data.points.length > 1
+      ? Math.round((data.points[data.points.length-1].t - data.points[0].t) / 60000)
+      : 0;
+    const hrs = data.points.filter(p => p.hr).map(p => p.hr);
+    const avgHr = hrs.length ? Math.round(hrs.reduce((a,b) => a+b, 0) / hrs.length) : null;
+    gpxStats.textContent = `${totalMin}min · ${data.total.toLocaleString()} pts` + (avgHr ? ` · avg ${avgHr}bpm` : '');
+    renderGpxMap(data, project.clips || []);
+    renderGpxCharts(data);
+    renderGpxClipStats(data, project.clips || []);
+  } catch(e) { console.error('GPX load failed', e); }
+}
+
+function renderGpxMap(data, clips) {
+  const pts = data.points;
+  if (!pts.length) return;
+  const lats = pts.map(p => p.lat), lons = pts.map(p => p.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const pad = 10;
+  const W = 400, H = 220;
+  const scaleX = (W - pad*2) / (maxLon - minLon || 1);
+  const scaleY = (H - pad*2) / (maxLat - minLat || 1);
+  const scale = Math.min(scaleX, scaleY);
+  const offX = (W - (maxLon - minLon) * scale) / 2;
+  const offY = (H - (maxLat - minLat) * scale) / 2;
+  const px = p => offX + (p.lon - minLon) * scale;
+  const py = p => H - offY - (p.lat - minLat) * scale;
+
+  const fullPath = pts.map((p,i) => `${i===0?'M':'L'}${px(p).toFixed(1)},${py(p).toFixed(1)}`).join(' ');
+  let svg = `<path class="gpx-track" d="${fullPath}"/>`;
+
+  // Colored segments per clip
+  data.segments.forEach((seg, i) => {
+    const segPts = pts.slice(seg.startIdx, seg.endIdx);
+    if (segPts.length < 2) return;
+    const d = segPts.map((p,j) => `${j===0?'M':'L'}${px(p).toFixed(1)},${py(p).toFixed(1)}`).join(' ');
+    svg += `<path class="gpx-seg" d="${d}" stroke="${SEG_COLORS[i % SEG_COLORS.length]}" title="Part ${i+1}"/>`;
+    // Start dot
+    const sp = segPts[0];
+    svg += `<circle cx="${px(sp).toFixed(1)}" cy="${py(sp).toFixed(1)}" r="3" fill="${SEG_COLORS[i % SEG_COLORS.length]}" opacity="0.9"/>`;
+  });
+
+  gpxMap.innerHTML = svg;
+  gpxMap.setAttribute('viewBox', `0 0 ${W} ${H}`);
+}
+
+function renderGpxCharts(data) {
+  const pts = data.points.filter(p => p.t);
+  renderLineChart('gpx-hr-chart', pts, 'hr', '#f66', '#300', 'HR');
+  renderLineChart('gpx-ele-chart', pts, 'ele', '#6af', '#003', 'Elev');
+}
+
+function renderLineChart(canvasId, pts, field, color, bgColor, label) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const vals = pts.map(p => p[field]).filter(v => v != null);
+  if (!vals.length) { canvas.style.display = 'none'; return; }
+  canvas.style.display = 'block';
+  const W = canvas.offsetWidth || 300, H = parseInt(canvas.getAttribute('height')) || 50;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = max - min || 1;
+  ctx.clearRect(0, 0, W, H);
+  // Segment fills
+  if (gpxData?.segments) {
+    gpxData.segments.forEach((seg, i) => {
+      const x1 = (seg.startIdx / pts.length) * W;
+      const x2 = (seg.endIdx   / pts.length) * W;
+      ctx.fillStyle = SEG_COLORS[i % SEG_COLORS.length] + '22';
+      ctx.fillRect(x1, 0, x2 - x1, H);
+    });
+  }
+  // Line
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const v = p[field];
+    if (v == null) return;
+    const x = (i / (pts.length - 1)) * W;
+    const y = H - ((v - min) / range) * (H - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Label
+  ctx.fillStyle = color;
+  ctx.font = '9px system-ui';
+  ctx.fillText(`${label}: ${Math.round(min)}–${Math.round(max)}`, 4, 10);
+}
+
+function renderGpxClipStats(data, clips) {
+  gpxClipStats.innerHTML = '';
+  data.segments.forEach((seg, i) => {
+    const segPts = data.points.slice(seg.startIdx, seg.endIdx).filter(p => p.t);
+    if (!segPts.length) return;
+    const hrs = segPts.filter(p => p.hr).map(p => p.hr);
+    const avgHr = hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : null;
+    const eles = segPts.filter(p => p.ele != null).map(p => p.ele);
+    const eleGain = eles.length > 1 ? Math.max(0, Math.round(eles.reduce((acc,e,j) => j > 0 && e > eles[j-1] ? acc + (e - eles[j-1]) : acc, 0))) : null;
+    const durationMs = segPts[segPts.length-1].t - segPts[0].t;
+    const stat = document.createElement('div');
+    stat.className = 'gpx-stat';
+    stat.style.borderColor = SEG_COLORS[i % SEG_COLORS.length] + '66';
+    stat.innerHTML = `<span style="color:${SEG_COLORS[i % SEG_COLORS.length]}">Pt ${i+1}</span>` +
+      (avgHr ? ` · <span>${avgHr}</span>bpm` : '') +
+      (eleGain != null ? ` · +<span>${eleGain}</span>m` : '') +
+      ` · <span>${Math.round(durationMs/60000)}</span>min`;
+    gpxClipStats.appendChild(stat);
+  });
+}
+
+document.getElementById('gpx-change-btn').addEventListener('click', () => {
+  const newPath = prompt('GPX file path:', gpxData ? '' : '/home/midders/Documents/strava-data/');
+  if (!newPath) return;
+  fetch(`/api/projects/${currentProjectId}/gpx`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ gpx_path: newPath }),
+  }).then(async r => {
+    if (!r.ok) { const e = await r.json(); alert('Error: ' + e.error); return; }
+    const proj = allProjects.find(p => p.id === currentProjectId);
+    if (proj) { proj.gpx_path = newPath; loadGpxPanel(proj); }
+  });
+});
+
 // ============================================================
 
 loadLibrary().then(async () => {
@@ -2191,16 +3264,21 @@ loadLibrary().then(async () => {
       startDescribeAllPoll(done + pending + processing);
     }
   } catch {}
-  // Auto-resume sync progress bar if already running
+  // Auto-resume sync progress bar if already running, or show retry if failed
   try {
     const { pending, processing, done, error } = await fetch('/api/sync-progress').then(r => r.json());
+    const statusEl = document.getElementById('sync-status-msg');
+    const barEl    = document.getElementById('sync-progress-bar');
     if (pending > 0 || processing > 0) {
-      const statusEl = document.getElementById('sync-status-msg');
-      const barEl    = document.getElementById('sync-progress-bar');
+      const total = pending + processing + done + error;
       statusEl.style.display = 'block';
       barEl.style.display = 'block';
-      statusEl.textContent = `⬆ Syncing to YouTube: ${done} done, ${pending + processing} remaining…`;
-      pollSyncProgress(pending + processing + done + error);
+      document.getElementById('sync-progress-fill').style.width = Math.round((done / total) * 100) + '%';
+      statusEl.textContent = `⬆ Uploading to YouTube: ${done} of ${total} done, ${pending + processing} remaining…`;
+      pollSyncProgress(total);
+    } else if (error > 0 && done > 0) {
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = `⚠️ ${done} uploaded, ${error} failed. <button onclick="retrySyncFailed()" style="background:rgba(200,0,0,.5);border:1px solid #c00;color:#fff;padding:2px 10px;border-radius:4px;font-size:11px;cursor:pointer">↺ Retry failed</button>`;
     }
   } catch {}
 });

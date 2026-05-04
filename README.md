@@ -1,17 +1,18 @@
 # DJI Player
 
-Personal video library and editor prep tool for DJI drone and iPhone footage. Browse, tag, and organise clips, generate AI titles and descriptions, upload to YouTube, and assemble edit projects ready for Kdenlive.
+Personal video library, organiser, and edit-prep tool for DJI drone footage. Browse, tag, and organise clips, generate AI titles and descriptions, upload to YouTube and Google Drive, overlay live GPS/fitness data during playback, and assemble edit projects ready for Kdenlive.
 
 ---
 
 ## Features
 
 **Library**
-- Scans multiple directories recursively for video files (MP4, MOV, AVI, MKV)
-- Thumbnail grid with lazy loading, deduplication by filename + size
+- Single consolidated video directory (`~/Videos/DJI-camera-files/`) scanned recursively
+- Thumbnail grid with lazy loading and deduplication by filename + size
 - Sort by date, size, duration, or name
 - Search across filenames, AI titles, and transcripts
 - Filter by tag or GPS location
+- SD card auto-import — when a DJI SD card is mounted, new files are automatically copied to the library
 
 **Playback**
 - Canvas-based player with brightness, contrast, saturation, sharpness, and zoom controls
@@ -19,10 +20,16 @@ Personal video library and editor prep tool for DJI drone and iPhone footage. Br
 - Export clip with colour correction applied (re-encodes via FFmpeg)
 - TV/smart display fallback (plain `<video>` element for browsers that block canvas)
 
+**Live GPS / Fitness Overlay**
+- When a clip belongs to a run project with a linked GPX file, a HUD is overlaid during playback
+- Mini route map with position dot and travelled-so-far highlight
+- HR zone bar (Karvonen/HRR method) that fills up as heart rate increases — zones per project using configured max HR and resting HR
+- Stats: heart rate, pace, grade (200 m smoothing window), air temperature, distance, elapsed run time
+- Supports both Garmin and Strava GPX exports; prefers Garmin (has `atemp` temperature field)
+
 **AI descriptions**
 - Generates titles and descriptions for every clip using Claude Haiku
 - Uses GPS location, date, duration, and Whisper transcript as context
-- Bulk "Describe All" with live progress bar; resumes after restart
 - Editable via the ✏️ Edit modal
 
 **Transcription**
@@ -32,8 +39,14 @@ Personal video library and editor prep tool for DJI drone and iPhone footage. Br
 **Tags**
 - Add/remove tags per clip; filter bar updates live
 - Tags can be linked to a YouTube playlist — uploading a tagged clip auto-adds it to the playlist
-- ⬆ Sync button on linked tags queues all tagged clips for upload + playlist add in one click
-- Private videos tagged `hidden` are hidden by default (PIN-protected unlock)
+- ⬆ Sync button on linked tags queues all tagged clips for upload in one click
+- Videos tagged `hidden` are stored in a `.hidden/` subfolder (hidden from Linux file managers) and PIN-protected in the app
+
+**Google Drive**
+- Per-clip upload via rclone to `gdrive:DJI-footage`
+- Card shows live "Uploading…" state, flips to "🗑 Local" automatically when Drive confirms the file
+- Archive button: uploads to Drive then deletes local copy to free disk space
+- Bulk archive panel: lists old clips already on Drive and removes local copies in one click
 
 **YouTube**
 - OAuth2 upload with real-time progress bar
@@ -42,14 +55,14 @@ Personal video library and editor prep tool for DJI drone and iPhone footage. Br
 - Bulk sync queue: background worker uploads and adds to playlist, survives server restarts
 - Update YouTube title/description/tags from the Edit modal after upload
 
-**Edit Projects** *(Phase 1 of Kdenlive pipeline)*
+**Edit Projects**
 - Named projects with a storyline/notes field
 - Add clips from the library; drag to reorder
 - Per-clip trim in/out sliders (auto-save)
 - Per-clip notes
 - ▶ Preview button — opens clip in player, back button returns to the project editor
-- Phase 2 (planned): silence detection + transcript-guided auto-trim suggestions
-- Phase 3 (planned): export to Kdenlive `.mlt` file
+- Running projects: link a Strava or Garmin GPX file; project panel shows route map, HR/elevation charts, and per-clip stats
+- Export to Kdenlive `.mlt` file
 
 **GPS / Locations**
 - Extracts GPS coords from iPhone MOV files (ISO 6709 QuickTime tag)
@@ -65,6 +78,10 @@ Personal video library and editor prep tool for DJI drone and iPhone footage. Br
 ```bash
 # FFmpeg (thumbnails, streaming, export)
 sudo apt install ffmpeg
+
+# rclone (Google Drive sync)
+sudo apt install rclone
+rclone config  # set up a remote named "gdrive"
 
 # Python + Whisper (transcription — optional)
 pip install openai-whisper
@@ -94,18 +111,16 @@ GOOGLE_OAUTH_CLIENT_SECRET=...
 - **Anthropic key** — get one at console.anthropic.com (needs credits for AI descriptions)
 - **Google OAuth** — create a project at console.cloud.google.com, enable YouTube Data API v3, create OAuth 2.0 credentials (Web application), add `http://localhost:3000/auth/youtube/callback` as an authorised redirect URI
 
-### 4. Configure video directories
+### 4. Video directory
 
-Edit `VIDEO_DIRS` near the top of `server.js` to point at wherever your footage lives:
+All footage lives in one place:
 
-```js
-const VIDEO_DIRS = [
-  path.join(__dirname, 'videos'),           // local test clips
-  '/home/you/Documents/DJI Camera files',
-  '/home/you/Pictures/camera vids',
-  // ...
-];
 ```
+~/Videos/DJI-camera-files/         ← main library
+~/Videos/DJI-camera-files/.hidden/ ← PIN-protected clips (hidden from file manager)
+```
+
+Edit `IMPORT_DEST` near the top of `server.js` if you want a different location.
 
 ### 5. Run
 
@@ -113,7 +128,7 @@ const VIDEO_DIRS = [
 node server.js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — Basic Auth prompt will appear (use `DJI_USER` / `DJI_PASS` from `.env`).
+Open [http://localhost:3000](http://localhost:3000) — Basic Auth prompt will appear.
 
 To restart cleanly:
 
@@ -123,7 +138,11 @@ lsof -ti :3000 | xargs kill 2>/dev/null; sleep 1 && node server.js &
 
 ### 6. Connect YouTube (optional)
 
-Click **▶ Playlists** → authenticate with Google. The OAuth token is saved to `yt-token.json` (gitignored). If you get scope errors, delete `yt-token.json` and re-authenticate.
+Click **▶ Playlists** → authenticate with Google. The OAuth token is saved to `yt-token.json` (gitignored).
+
+### 7. Connect Google Drive (optional)
+
+Run `rclone config` and set up a remote named `gdrive`. The app uploads to `gdrive:DJI-footage`. The `GDRIVE_REMOTE` constant in `server.js` can be changed if needed.
 
 ---
 
@@ -131,12 +150,11 @@ Click **▶ Playlists** → authenticate with Google. The OAuth token is saved t
 
 | File | Purpose |
 |---|---|
-| `server.js` | Entire backend — Express 5, SQLite (better-sqlite3), FFmpeg, Claude API, YouTube Data API |
+| `server.js` | Entire backend — Express, SQLite (better-sqlite3), FFmpeg, rclone, Claude API, YouTube Data API |
 | `public/index.html` | Entire frontend — vanilla JS, no framework, all CSS inline |
-| `videos.db` | SQLite database — metadata, tags, transcripts, descriptions, projects, YouTube state |
+| `videos.db` | SQLite database — metadata, tags, transcripts, descriptions, projects, YouTube/Drive state |
 | `.env` | Credentials (gitignored) |
 | `yt-token.json` | YouTube OAuth token (gitignored) |
 | `public/thumbs/` | Generated JPEG thumbnails (gitignored) |
-| `meta-cache.json` | Legacy ffprobe cache — migrated to DB on first run |
 
 The server is single-file, no build step. Edit `server.js` or `public/index.html` and restart.
